@@ -9,7 +9,7 @@ messages:
  tree:
   grow-lvl-ready: Woosh! Press Right Mouse Button to let tree grow!
   grow-lvl-progress: _UNUSED
-  grow-req-list-title: Required:
+  grow-req-list-title: Required
   grow-not-enough-place: Not enough place to make it grow
   grow-lvl-max: This tree has reached it's maximum level!
   tree-limit: Hey, do not be greedy! (Tree limit)

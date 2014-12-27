@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
@@ -55,6 +56,7 @@ public class Main extends JavaPlugin {
 	public void onEnable() {
 		this.saveDefaultConfig();
 		this.saveDefaultLocales();
+		ParticleEffect.setRange(16);
 		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy kk-mm-ss");
 		UPDATE_SPEED = config.getInt("core.update-speed");
 		if (UPDATE_SPEED <= 0) {
@@ -157,6 +159,9 @@ public class Main extends JavaPlugin {
 		if (config.getConfigurationSection("xmas.tree-lvl.magic_tree.lvlup") != null)
 			magic_levelup = TreeSerializer.convertRequirementsMap(config.getConfigurationSection("xmas.tree-lvl.magic_tree.lvlup").getValues(false));
 
+		for (Entry<Material, Integer> ce : tree_levelup.entrySet()) {
+			Bukkit.broadcastMessage(ce.getKey() + " : " + ce.getValue());
+		}
 		TreeLevel.MAGIC_TREE = new TreeLevel("magic_tree", Effects.TREE_WHITE_AMBIENT, Effects.TREE_SWAG, null, null, magic_delay, magic_levelup, new StructureTemplate(new HashMap<Vector, Material>() {
 			private static final long serialVersionUID = 1L;
 			{

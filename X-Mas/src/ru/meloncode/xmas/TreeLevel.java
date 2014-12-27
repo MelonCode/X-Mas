@@ -16,12 +16,12 @@ public class TreeLevel {
 	long giftDelay;
 	Map<Material, Integer> levelupRequirements;
 	StructureTemplate structure;
-	ParticleEffect ambientEffect;
-	ParticleEffect swagEffect;
-	ParticleEffect bodyEffect;
+	ParticleContainer ambientEffect;
+	ParticleContainer swagEffect;
+	ParticleContainer bodyEffect;
 	private int height;
 
-	public TreeLevel(String levelName, ParticleEffect ambientEffect, ParticleEffect swagEffect, ParticleEffect bodyEffect, TreeLevel nextLevel, long giftDelay, Map<Material, Integer> levelupRequirements, StructureTemplate structure) {
+	public TreeLevel(String levelName, ParticleContainer ambientEffect, ParticleContainer swagEffect, ParticleContainer bodyEffect, TreeLevel nextLevel, long giftDelay, Map<Material, Integer> levelupRequirements, StructureTemplate structure) {
 		this.levelName = levelName;
 		this.nextLevel = nextLevel;
 		this.giftDelay = giftDelay;
@@ -45,15 +45,15 @@ public class TreeLevel {
 		return nextLevel;
 	}
 
-	public ParticleEffect getAmbientEffect() {
+	public ParticleContainer getAmbientEffect() {
 		return ambientEffect;
 	}
 
-	public ParticleEffect getSwagEffect() {
+	public ParticleContainer getSwagEffect() {
 		return swagEffect;
 	}
 
-	public ParticleEffect getBodyEffect() {
+	public ParticleContainer getBodyEffect() {
 		return bodyEffect;
 	}
 

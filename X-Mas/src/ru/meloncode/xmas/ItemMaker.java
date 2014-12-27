@@ -1,6 +1,6 @@
 package ru.meloncode.xmas;
 
-//I plan to make this plugin bigger. So...
+//I plan to make this plugin bigger. So... 
 
 import java.util.ArrayList;
 import java.util.List;
