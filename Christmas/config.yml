@@ -1,0 +1,73 @@
+core:
+ plugin-enabled: true
+ locale: en
+#Max tree count per player
+ tree-limit: 3
+#On date all trees stop to spawn presents and particles. 
+#Players can unbuild it and get resources back (if enabled)
+ holiday-ends:
+  enabled: true
+#DD.MM.YYYY HH-MM-SS
+  date: 10-01-2015 03-33-33
+# if true - plugin will summon chest with spent resources under tree
+  resource-back: true
+  
+ #Task timer speed. All time values are scaled, so it will affect only particle-spawning.
+ #I don't Recommend  to touch it.
+ #20 = 1 update / sec
+ #Can't be 0
+ update-speed: 7 
+xmas:
+ luck:
+  enabled: false
+# Value 1-100
+  chance: 75
+#Add here all nicknames of players which head you can use as one of the gift skin
+ presents:
+  - CruXXx
+  - SeerPotion
+  - I_Xenon_I
+  - FennoBear
+ gifts:
+  - DIAMOND
+  - EMERALD
+  - IRON_SWORD
+  - IRON_HELMET
+  - IRON_CHESTPLATE
+  - IRON_BOOTS
+  - CAKE
+  - COOKIE
+  - BLAZE_ROD
+  - DIAMOND_SWORD
+  - IRON_INGOT
+  - GOLD_INGOT
+  - SPONGE
+  - DIAMOND_HOE
+  - NAME_TAG
+
+ tree-lvl:
+  sapling:
+   #-1 to disable present spawning
+   gift-cooldown: -1
+   #Resources to up level tree to next.
+   lvlup:
+    DIAMOND: 1
+    REDSTONE: 10
+    ENDER_PEARL: 1
+  small_tree:
+   gift-cooldown: 300
+   lvlup:
+    DIAMOND: 3
+    GOLD_INGOT: 5
+    BLAZE_POWDER: 10
+    SNOW_BALL: 30
+  tree:
+   gift-cooldown: 180
+   lvlup:
+    DIAMOND: 5
+    EMERALD: 3
+    GOLD_NUGGET: 8
+    GLOWSTONE_DUST: 16
+  magic_tree:
+   gift-cooldown: 120
+   lvlup:
