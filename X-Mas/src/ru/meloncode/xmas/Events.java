@@ -26,6 +26,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import ru.meloncode.xmas.utils.TextUtils;
 
@@ -165,7 +166,10 @@ public class Events implements Listener {
 	public void onItemSpawn(ItemSpawnEvent event) {
 		ItemStack item = event.getEntity().getItemStack();
 		if (item.getType() == Material.SKULL_ITEM) {
-			event.setCancelled(true);
+			SkullMeta meta = (SkullMeta) item.getItemMeta();
+			if (meta.getOwner() != null && Main.getHeads().contains(meta.getOwner())) {
+				event.setCancelled(true);
+			}
 		}
 	}
 
