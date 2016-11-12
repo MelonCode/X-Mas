@@ -1,0 +1,30 @@
+#_UNUSED is a keyword to disable message.
+
+#For chat
+plugin-name: Новый Год!
+
+messages:
+ plugin-enabled: С Новым Годом!
+ timeout: Праздники подошли к концу. Увидимся в следующем году ;)
+ tree:
+  grow-lvl-ready: Отлично! Нажмите правой кнопкой чтобы поднять уровень дерева!
+  grow-lvl-progress: _UNUSED
+  grow-req-list-title: Требуется
+  grow-not-enough-place: Недостаточно места!
+  grow-lvl-max: Дерево уже имеет максимальный уровень
+  tree-limit: Не жадничайте! (Слишком много деревьев)
+  destroy-sapling: Это чудо не выпадет. Вы уверены? :<
+  destroy-leaves-santa: Дед Мороз все видит!
+  destroy-leaves-tut: Для того чтобы срубить Ёлку - руби ствол!
+  destroy-warning: Вы уверены? Весь прогресс будет потерян. Ресурсы возвращены не будут.
+  destroy-tut: Чтобы срубить Ёлку разрушьте блок еще раз.
+  destroy-fail-owner: Это не ваше дерево.
+  destroy-complete: И не жалко?!
+ gift:
+  luck-message: _UNUSED
+  unluck-message: Кажется кто-то плохо вел себя в этом году... Попробуй еще раз.
+crystal:
+ name: Волшебный кристалл
+ lore: 
+  - Содержит в себе концентрированный Новогодний дух!
+  - Используйте его на саженце чтобы сделать его волшебным. 
