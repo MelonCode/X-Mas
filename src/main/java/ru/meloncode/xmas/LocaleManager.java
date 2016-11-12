@@ -10,6 +10,7 @@ import java.util.List;
 
 public class LocaleManager {
 
+    private static final FileConfiguration def_locale = ConfigUtils.loadConfig(new File(Main.getInstance().getDataFolder() + "/locales/default.yml"));
     public static String PLUGIN_NAME;
     public static String PLUGIN_ENABLED;
     public static String GROW_LVL_PROGRESS;
@@ -32,7 +33,6 @@ public class LocaleManager {
     public static String TIMEOUT;
     public static String HAPPY_NEW_YEAR;
     private static FileConfiguration locale;
-    private static final FileConfiguration def_locale = ConfigUtils.loadConfig(new File(Main.getInstance().getDataFolder() + "/locales/default.yml"));
 
     public static void loadLocale(String lang) {
         File file = new File(Main.getInstance().getDataFolder() + "/locales/" + lang + ".yml");
@@ -63,7 +63,7 @@ public class LocaleManager {
         DESTROY_WARNING = getString("messages.tree.destroy-warning");
         DESTROY_TUT = getString("messages.tree.destroy-tut");
         DESTROY_FAIL_OWNER = getString("messages.tree.destroy-fail-owner");
-        CRYSTAL_NAME = getString("crystal.name");
+        CRYSTAL_NAME = ChatColor.GREEN + getString("crystal.name");
         CRYSTAL_LORE = getStringList("crystal.lore");
         GIFT_LUCK = getString("messages.gift.luck-message");
         GIFT_FAIL = getString("messages.gift.unluck-message");
