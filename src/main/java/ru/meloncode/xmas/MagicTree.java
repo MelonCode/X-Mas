@@ -17,11 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MagicTree {
     private static final ConcurrentHashMap<Block, UUID> blockAssociation = new ConcurrentHashMap<>();
     private final UUID owner;
-    TreeLevel level;
     private final Location location;
-    private Map<Material, Integer> levelupRequirements;
     private final UUID treeuid;
     private final Set<Block> presents = new HashSet<>();
+    TreeLevel level;
+    private Map<Material, Integer> levelupRequirements;
     private Set<Block> blocks;
     private long presentCounter = 0;
 
@@ -145,11 +145,7 @@ public class MagicTree {
         for (int i = 0; i <= 3; i++) {
             Firework fw = location.getWorld().spawn(location.clone().add(new Vector(-3 + Main.RANDOM.nextInt(6), 3, -3 + Main.RANDOM.nextInt(6))), Firework.class);
             FireworkMeta meta = fw.getFireworkMeta();
-            if (Main.RANDOM.nextBoolean()) {
-                meta.addEffect(FireworkEffect.builder().trail(true).withColor(Color.RED).withFade(Color.LIME).withFlicker().with(Type.BURST).build());
-            } else {
-                meta.addEffect(FireworkEffect.builder().trail(true).withColor(Color.BLUE).withFade(Color.RED).withFlicker().with(Type.BALL_LARGE).build());
-            }
+            meta.addEffect(FireworkEffect.builder().trail(true).withColor(Color.RED).withFade(Color.LIME).withFlicker().with(Type.BURST).build());
             fw.setFireworkMeta(meta);
         }
         build();
@@ -270,5 +266,6 @@ public class MagicTree {
                 count = 0;
             }
         }
+        XMas.removeTree(this);
     }
 }

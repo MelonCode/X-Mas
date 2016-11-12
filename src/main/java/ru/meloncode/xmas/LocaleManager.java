@@ -30,6 +30,7 @@ public class LocaleManager {
     public static String GIFT_FAIL;
     public static String MONSTER;
     public static String TIMEOUT;
+    public static String HAPPY_NEW_YEAR;
     private static FileConfiguration locale;
     private static final FileConfiguration def_locale = ConfigUtils.loadConfig(new File(Main.getInstance().getDataFolder() + "/locales/default.yml"));
 
@@ -67,6 +68,7 @@ public class LocaleManager {
         GIFT_LUCK = getString("messages.gift.luck-message");
         GIFT_FAIL = getString("messages.gift.unluck-message");
         TIMEOUT = getString("messages.timeout");
+        HAPPY_NEW_YEAR = getString("messages.final-wish");
 
     }
 

@@ -94,8 +94,12 @@ class Events implements Listener {
                         TextUtils.sendMessage(player, LocaleManager.GROW_LEVEL_MAX);
                     }
                 } else {
-                    tree.end();
-                    TextUtils.sendMessage(player, LocaleManager.TIMEOUT);
+                    if (player.getUniqueId().equals(tree.getOwner())) {
+                        tree.end();
+                        TextUtils.sendMessage(player, LocaleManager.TIMEOUT);
+                    } else {
+                        TextUtils.sendMessage(player, LocaleManager.DESTROY_FAIL_OWNER);
+                    }
                 }
             } else {
                 if (block.getType() == Material.SAPLING) {

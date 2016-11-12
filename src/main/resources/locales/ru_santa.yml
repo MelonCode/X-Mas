@@ -6,6 +6,7 @@ plugin-name: Новый Год!
 messages:
  plugin-enabled: Счастливого Рождества!
  timeout: Праздники подошли к концу. Увидимся в следующем году ;)
+ final-wish: Счастливого Нового года!
  tree:
   grow-lvl-ready: Нажмите правой кнопкой чтобы поднять уровень дерева!
   grow-lvl-progress: _UNUSED
