@@ -3,6 +3,7 @@ package ru.meloncode.xmas;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,15 +18,15 @@ import java.util.*;
 public class Main extends JavaPlugin {
 
     // Yeah. That's as it should be.
-    public static final Random RANDOM = new Random(Calendar.getInstance().get(Calendar.YEAR));
-    public static List<Material> gifts;
-    public static float LUCK_CHANCE;
-    public static boolean LUCKCHANCEENABLED;
-    public static boolean BACK_RESOURCES;
-    public static int MAX_TREE_COUNT;
-    public static boolean AUTO_END;
-    public static long END_TIME;
-    public static boolean EVENT_IN_PROGRESS = true;
+    static final Random RANDOM = new Random(Calendar.getInstance().get(Calendar.YEAR));
+    static List<ItemStack> gifts;
+    static float LUCK_CHANCE;
+    static boolean LUCKCHANCEENABLED;
+    static boolean BACK_RESOURCES;
+    static int MAX_TREE_COUNT;
+    static boolean AUTO_END;
+    static long END_TIME;
+    static boolean EVENT_IN_PROGRESS = true;
     private static int UPDATE_SPEED;
     private static List<String> heads;
     private static Plugin plugin;
@@ -76,11 +77,28 @@ public class Main extends JavaPlugin {
             return;
         }
         gifts = new ArrayList<>();
-        for (String cKey : config.getStringList("xmas.gifts")) {
+        for (String cItem : config.getStringList("xmas.gifts")) {
             try {
-                gifts.add(Material.valueOf(cKey));
+
+                if (cItem.contains(":")) {
+                    String[] split = cItem.split(":");
+                    if (split.length == 0) throw new IllegalArgumentException();
+
+                    Material material;
+                    int amount = 1;
+                    short data = 0;
+
+                    material = Material.valueOf(split[0]);
+                    if (split.length > 1) amount = Integer.parseInt(split[1]);
+                    if (split.length > 2) data = Short.parseShort(split[2]);
+                    gifts.add(new ItemStack(material, amount, data));
+                } else {
+                    gifts.add(new ItemStack(Material.valueOf(cItem)));
+                }
+
             } catch (IllegalArgumentException e) {
-                getLogger().warning(ChatColor.RED + "[X-Mas] Unable to get material of '" + cKey + "'");
+                getLogger().severe(ChatColor.RED + "[X-Mas] Unable to get load gift from  '" + cItem + "'");
+                getLogger().warning(ChatColor.RED + "[X-Mas] For gifts - use format MATERIAL:AMOUNT:DATA. Amount and data are optional");
             }
         }
         if (gifts.size() == 0) {

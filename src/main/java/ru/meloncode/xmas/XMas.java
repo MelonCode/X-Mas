@@ -17,8 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class XMas {
 
-    public static ItemStack XMAS_CRYSTAL;
     private static final ConcurrentHashMap<UUID, MagicTree> trees = new ConcurrentHashMap<>();
+    public static ItemStack XMAS_CRYSTAL;
 
     public static void createMagicTree(Player player, Location loc) {
         MagicTree tree = new MagicTree(player.getUniqueId(), TreeLevel.SAPLING, loc);
@@ -46,13 +46,14 @@ class XMas {
             Skull skull = (Skull) block.getState();
             if (skull.getSkullType() == SkullType.PLAYER) {
                 if (Main.getHeads().contains(skull.getOwner())) {
+                    Location loc = block.getLocation();
                     if ((Main.RANDOM.nextFloat()) < Main.LUCK_CHANCE || !Main.LUCKCHANCEENABLED) {
-                        block.getLocation().getWorld().dropItemNaturally(block.getLocation(), new ItemStack(Main.gifts.get(Main.RANDOM.nextInt(Main.gifts.size()))));
-                        Effects.TREE_SWAG.playEffect(block.getLocation());
+                        loc.getWorld().dropItemNaturally(loc, new ItemStack(Main.gifts.get(Main.RANDOM.nextInt(Main.gifts.size()))));
+                        Effects.TREE_SWAG.playEffect(loc);
                         TextUtils.sendMessage(player, LocaleManager.GIFT_LUCK);
                     } else {
-                        Effects.SMOKE.playEffect(block.getLocation());
-                        block.getLocation().getWorld().dropItemNaturally(block.getLocation(), new ItemStack(Material.COAL));
+                        Effects.SMOKE.playEffect(loc);
+                        loc.getWorld().dropItemNaturally(loc, new ItemStack(Material.COAL));
                         TextUtils.sendMessage(player, LocaleManager.GIFT_FAIL);
                     }
                     block.setType(Material.AIR);
