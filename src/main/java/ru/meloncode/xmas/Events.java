@@ -11,6 +11,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.StructureGrowEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -51,6 +52,7 @@ class Events implements Listener {
     @SuppressWarnings("deprecation")
     @EventHandler
     public void onPlayerClickBlock(PlayerInteractEvent event) {
+        if (event.getHand() == EquipmentSlot.OFF_HAND) return; //Event firing for both hands
         Player player = event.getPlayer();
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block block = event.getClickedBlock();

@@ -26,7 +26,7 @@ public class TextUtils {
                 if (tree.getLevelupRequirements().containsKey(cMaterial))
                     treeReq = tree.getLevelupRequirements().get(cMaterial);
 
-                list.add(ChatColor.BOLD + "" + (treeReq == 0 ? ChatColor.GREEN + "" + ChatColor.STRIKETHROUGH : ChatColor.RED + "" + ChatColor.UNDERLINE) + WordUtils.capitalizeFully(String.valueOf(cMaterial) + " : " + (levelReq - treeReq + " / " + levelReq)));
+                list.add(ChatColor.BOLD + "" + (treeReq == 0 ? ChatColor.GREEN + "" + ChatColor.STRIKETHROUGH : ChatColor.RED) + WordUtils.capitalizeFully(String.valueOf(cMaterial).replace('_', ' ') + " : " + (levelReq - treeReq + " / " + levelReq)));
             }
         return list;
     }

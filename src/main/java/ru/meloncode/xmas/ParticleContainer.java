@@ -1,18 +1,19 @@
 package ru.meloncode.xmas;
 
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 
 public class ParticleContainer {
 
-    private final ParticleEffect type;
+    private final Particle type;
     private final float offsetX;
     private final float offsetY;
     private final float offsetZ;
     private final float speed;
     private final int count;
 
-    public ParticleContainer(ParticleEffect type, float offsetX, float offsetY, float offsetZ, float speed, int count) {
+    public ParticleContainer(Particle type, float offsetX, float offsetY, float offsetZ, float speed, int count) {
         this.type = type;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
@@ -27,7 +28,7 @@ public class ParticleContainer {
         for (Player player : location.getWorld().getPlayers())
             if (player.getLocation().distance(location) < 16) {
                 try {
-                    type.sendToPlayer(player, location, offsetX, offsetY, offsetZ, speed, count);
+                    player.spawnParticle(type, location, count, offsetX, offsetY, offsetZ, speed);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

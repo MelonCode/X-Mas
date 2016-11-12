@@ -1,6 +1,5 @@
 package ru.meloncode.xmas;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -23,11 +22,11 @@ public class Main extends JavaPlugin {
     public static float LUCK_CHANCE;
     public static boolean LUCKCHANCEENABLED;
     public static boolean BACK_RESOURCES;
-    private static int UPDATE_SPEED;
     public static int MAX_TREE_COUNT;
     public static boolean AUTO_END;
     public static long END_TIME;
     public static boolean EVENT_IN_PROGRESS = true;
+    private static int UPDATE_SPEED;
     private static List<String> heads;
     private static Plugin plugin;
     private final FileConfiguration config = getConfig();
@@ -50,7 +49,6 @@ public class Main extends JavaPlugin {
     public void onEnable() {
         this.saveDefaultConfig();
         this.saveDefaultLocales();
-        ParticleEffect.setRange(16);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy kk-mm-ss");
         UPDATE_SPEED = config.getInt("core.update-speed");
         if (UPDATE_SPEED <= 0) {
@@ -74,7 +72,7 @@ public class Main extends JavaPlugin {
         LocaleManager.loadLocale(locale);
         heads = config.getStringList("xmas.presents");
         if (heads.size() == 0) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[X-Mas] Warning! No heads loaded! Presents can't spawn without box!");
+            getLogger().warning(ChatColor.RED + "Warning! No heads loaded! Presents can't spawn without box!");
             return;
         }
         gifts = new ArrayList<>();
@@ -82,11 +80,11 @@ public class Main extends JavaPlugin {
             try {
                 gifts.add(Material.valueOf(cKey));
             } catch (IllegalArgumentException e) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[X-Mas] Unable to get material of '" + cKey + "'");
+                getLogger().warning(ChatColor.RED + "[X-Mas] Unable to get material of '" + cKey + "'");
             }
         }
         if (gifts.size() == 0) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[X-Mas] Warning! No gifts loaded! No X-Mas without gifts!");
+            getLogger().warning(ChatColor.RED + "[X-Mas] Warning! No gifts loaded! No X-Mas without gifts!");
             return;
         }
 
