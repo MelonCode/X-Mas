@@ -31,7 +31,7 @@ public class MagicTree {
         this.level = level;
         this.location = location;
         this.levelupRequirements = new HashMap<>(level.getLevelupRequirements());
-        if (Main.EVENT_IN_PROGRESS)
+        if (Main.inProgress)
             build();
     }
 
@@ -41,7 +41,7 @@ public class MagicTree {
         this.level = level;
         this.location = location;
         this.levelupRequirements = new HashMap<>(levelupRequirements);
-        if (Main.EVENT_IN_PROGRESS)
+        if (Main.inProgress)
             build();
     }
 
@@ -97,7 +97,7 @@ public class MagicTree {
     }
 
     public void update() {
-        if (Main.EVENT_IN_PROGRESS) {
+        if (Main.inProgress) {
             if (level.getGiftDelay() > 0) {
                 if (presentCounter == 0) {
                     spawnPresent();
@@ -176,7 +176,7 @@ public class MagicTree {
         }
     }
 
-    private void spawnPresent() {
+    public void spawnPresent() {
         Location presentLoc = location.clone().add(-1 + Main.RANDOM.nextInt(3), 0, -1 + Main.RANDOM.nextInt(3));
 
         Block pBlock = presentLoc.getBlock();
@@ -236,7 +236,7 @@ public class MagicTree {
             bl.setType(Material.AIR);
         if ((bl = location.clone().add(1, 0, -1).getBlock()).getType() == Material.SKULL)
             bl.setType(Material.AIR);
-        if (Main.BACK_RESOURCES) {
+        if (Main.resourceBack) {
             bl = location.getBlock();
             bl.setType(Material.CHEST);
             Chest chest = (Chest) bl.getState();

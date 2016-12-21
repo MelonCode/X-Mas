@@ -1,3 +1,7 @@
 name: X-Mas
 version: ${project.version}
 main: ru.meloncode.xmas.Main
+commands:
+ xmas:
+  usage: Use /<command> help to see help
+  permission: xmas.admin

@@ -6,6 +6,7 @@ import ru.meloncode.xmas.utils.ConfigUtils;
 import ru.meloncode.xmas.utils.TextUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class LocaleManager {
@@ -32,6 +33,11 @@ public class LocaleManager {
     public static String MONSTER;
     public static String TIMEOUT;
     public static String HAPPY_NEW_YEAR;
+
+    public static List<String> COMMAND_HELP;
+    public static String COMMAND_PLAYER_OFFLINE;
+    public static String COMMAND_NO_PLAYER_NAME;
+    public static String COMMAND_GIVEAWAY;
     private static FileConfiguration locale;
 
     public static void loadLocale(String lang) {
@@ -70,6 +76,11 @@ public class LocaleManager {
         TIMEOUT = getString("messages.timeout");
         HAPPY_NEW_YEAR = getString("messages.final-wish");
 
+        COMMAND_HELP = getStringList("command.help");
+        COMMAND_PLAYER_OFFLINE = getString("command.player-offline");
+        COMMAND_NO_PLAYER_NAME = getString("command.no-player-name");
+        COMMAND_GIVEAWAY = getString("command.giveaway");
+
     }
 
     private static String getString(String path) {
@@ -91,7 +102,13 @@ public class LocaleManager {
             throw new NullPointerException("Locale not loaded");
 
         try {
-            return locale.getStringList(path);
+            List<String> raw = locale.getStringList(path);
+            List<String> list = new ArrayList<>();
+            for (String s : raw) {
+                list.add(ChatColor.translateAlternateColorCodes('&', s));
+            }
+            return list;
+
         } catch (IllegalArgumentException e) {
             TextUtils.sendConsoleMessage(ChatColor.DARK_RED + "Unable to find '" + path + "' in locale " + Main.getInstance().getConfig().getString("core.locale") + ". Bad File?");
             TextUtils.sendConsoleMessage(ChatColor.DARK_RED + "Using default locale to get value");

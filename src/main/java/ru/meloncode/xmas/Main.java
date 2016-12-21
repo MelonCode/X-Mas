@@ -1,7 +1,10 @@
 package ru.meloncode.xmas;
 
+import com.google.common.collect.Lists;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -21,17 +24,17 @@ public class Main extends JavaPlugin {
     static final Random RANDOM = new Random(Calendar.getInstance().get(Calendar.YEAR));
     static List<ItemStack> gifts;
     static float LUCK_CHANCE;
-    static boolean LUCKCHANCEENABLED;
-    static boolean BACK_RESOURCES;
+    static boolean LUCK_CHANCE_ENABLED;
+    static boolean resourceBack;
     static int MAX_TREE_COUNT;
-    static boolean AUTO_END;
-    static long END_TIME;
-    static boolean EVENT_IN_PROGRESS = true;
+    static boolean autoEnd;
+    static long endTime;
+    static boolean inProgress;
     private static int UPDATE_SPEED;
     private static List<String> heads;
     private static Plugin plugin;
-    private final FileConfiguration config = getConfig();
-    private final String locale = config.getString("core.locale");
+    private FileConfiguration config;
+    private String locale;
 
     public static Plugin getInstance() {
         return plugin;
@@ -48,9 +51,12 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        this.saveDefaultConfig();
-        this.saveDefaultLocales();
+        this.saveDefaults();
+        config = getConfig();
+        locale = config.getString("core.locale");
+
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy kk-mm-ss");
+        inProgress = config.getBoolean("core.plugin-enabled", true);
         UPDATE_SPEED = config.getInt("core.update-speed");
         if (UPDATE_SPEED <= 0) {
             TextUtils.sendConsoleMessage("Update speed must be > 0");
@@ -58,13 +64,13 @@ public class Main extends JavaPlugin {
             config.set("core.update-speed", 7);
             UPDATE_SPEED = 7;
         }
-        AUTO_END = config.getBoolean("core.holiday-ends.enabled");
-        BACK_RESOURCES = config.getBoolean("core.holiday-ends.resource-back");
+        autoEnd = config.getBoolean("core.holiday-ends.enabled");
+        resourceBack = config.getBoolean("core.holiday-ends.resource-back");
         MAX_TREE_COUNT = config.getInt("core.tree-limit");
         Date date;
         try {
             date = sdf.parse(config.getString("core.holiday-ends.date"));
-            END_TIME = date.getTime();
+            endTime = date.getTime();
         } catch (ParseException e1) {
             TextUtils.sendConsoleMessage("Unable to load date");
         }
@@ -106,14 +112,15 @@ public class Main extends JavaPlugin {
             return;
         }
 
-        LUCKCHANCEENABLED = config.getBoolean("xmas.luck.enabled");
+        LUCK_CHANCE_ENABLED = config.getBoolean("xmas.luck.enabled");
         LUCK_CHANCE = (float) config.getInt("xmas.luck.chance") / 100;
         new Events().registerListener();
-        new MagicTask().runTaskTimer(this, 5, UPDATE_SPEED);
+        new MagicTask(this).runTaskTimer(this, 5, UPDATE_SPEED);
         XMas.XMAS_CRYSTAL = new ItemMaker(Material.EMERALD, LocaleManager.CRYSTAL_NAME, LocaleManager.CRYSTAL_LORE).make();
 
         ShapedRecipe grinderRecipe = new ShapedRecipe(XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
         getServer().addRecipe(grinderRecipe);
+        XMasCommand.register(this);
         TextUtils.sendConsoleMessage(LocaleManager.PLUGIN_ENABLED);
     }
 
@@ -125,21 +132,19 @@ public class Main extends JavaPlugin {
             }
     }
 
-    private void saveDefaultLocales() {
-        // Why does my cooode.. Feeling so bad..
-        plugin.saveResource("locales/" + "default.yml", true);
-        if (!new File(getDataFolder(), "/locales/en.yml").exists()) {
-            plugin.saveResource("locales/" + "en.yml", false);
-        }
-        if (!new File(getDataFolder(), "/locales/ru.yml").exists()) {
-            plugin.saveResource("locales/" + "ru.yml", false);
-        }
-        if (!new File(getDataFolder(), "/locales/ru_santa.yml").exists()) {
-            plugin.saveResource("locales/" + "ru_santa.yml", false);
-        }
-        if (!new File(getDataFolder(), "trees.yml").exists()) {
-            plugin.saveResource("trees.yml", false);
-        }
+    public void end() {
+        Bukkit.broadcastMessage(ChatColor.GREEN + LocaleManager.HAPPY_NEW_YEAR);
+        inProgress = false;
+        config.set("core.plugin-enabled", false);
+        saveConfig();
+    }
+
+    private void saveDefaults() {
+        this.saveDefaultConfig();
+        plugin.saveResource("locales/default.yml", true);
+        ArrayList<String> defaults = Lists.newArrayList("locales/en.yml", "locales/ru.yml", "locales/ru_santa.yml", "trees.yml");
+        for (String path : defaults)
+            if (!new File(getDataFolder(), '/' + path).exists()) plugin.saveResource(path, false);
     }
 
     private void defineTreeLevels() {
@@ -149,21 +154,12 @@ public class Main extends JavaPlugin {
         long tree_delay = config.getInt("xmas.tree-lvl.tree.gift-cooldown") * 20 / UPDATE_SPEED;
         long magic_delay = config.getInt("xmas.tree-lvl.magic_tree.gift-cooldown") * 20 / UPDATE_SPEED;
 
-        Map<Material, Integer> sapling_levelup = new HashMap<>();
-        Map<Material, Integer> small_levelup = new HashMap<>();
-        Map<Material, Integer> tree_levelup = new HashMap<>();
-        Map<Material, Integer> magic_levelup = new HashMap<>();
+        ConfigurationSection lvlups = config.getConfigurationSection("xmas.tree-lvl");
+        Map<Material, Integer> saplingLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("sapling.lvlup").getValues(false));
+        Map<Material, Integer> smallLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("small_tree.lvlup").getValues(false));
+        Map<Material, Integer> treeLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("tree.lvlup").getValues(false));
 
-        if (config.getConfigurationSection("xmas.tree-lvl.sapling.lvlup") != null)
-            sapling_levelup = TreeSerializer.convertRequirementsMap(config.getConfigurationSection("xmas.tree-lvl.sapling.lvlup").getValues(false));
-        if (config.getConfigurationSection("xmas.tree-lvl.small_tree.lvlup") != null)
-            small_levelup = TreeSerializer.convertRequirementsMap(config.getConfigurationSection("xmas.tree-lvl.small_tree.lvlup").getValues(false));
-        if (config.getConfigurationSection("xmas.tree-lvl.tree.lvlup") != null)
-            tree_levelup = TreeSerializer.convertRequirementsMap(config.getConfigurationSection("xmas.tree-lvl.tree.lvlup").getValues(false));
-        if (config.getConfigurationSection("xmas.tree-lvl.magic_tree.lvlup") != null)
-            magic_levelup = TreeSerializer.convertRequirementsMap(config.getConfigurationSection("xmas.tree-lvl.magic_tree.lvlup").getValues(false));
-
-        TreeLevel.MAGIC_TREE = new TreeLevel("magic_tree", Effects.TREE_WHITE_AMBIENT, Effects.TREE_SWAG, null, null, magic_delay, magic_levelup, new StructureTemplate(new HashMap<Vector, Material>() {
+        TreeLevel.MAGIC_TREE = new TreeLevel("magic_tree", Effects.TREE_WHITE_AMBIENT, Effects.TREE_SWAG, null, null, magic_delay, Collections.EMPTY_MAP, new StructureTemplate(new HashMap<Vector, Material>() {
             private static final long serialVersionUID = 1L;
 
             {
@@ -199,7 +195,7 @@ public class Main extends JavaPlugin {
             }
         }));
 
-        TreeLevel.TREE = new TreeLevel("tree", Effects.AMBIENT_SNOW, Effects.TREE_GOLD_SWAG, null, TreeLevel.MAGIC_TREE, tree_delay, tree_levelup, new StructureTemplate(new HashMap<Vector, Material>() {
+        TreeLevel.TREE = new TreeLevel("tree", Effects.AMBIENT_SNOW, Effects.TREE_GOLD_SWAG, null, TreeLevel.MAGIC_TREE, tree_delay, treeLevelUp, new StructureTemplate(new HashMap<Vector, Material>() {
             private static final long serialVersionUID = 1L;
 
             {
@@ -232,7 +228,7 @@ public class Main extends JavaPlugin {
             }
         }));
 
-        TreeLevel.SMALL_TREE = new TreeLevel("small_tree", Effects.AMBIENT_PORTAL, Effects.TREE_RED_SWAG, null, TreeLevel.TREE, small_delay, small_levelup, new StructureTemplate(new HashMap<Vector, Material>() {
+        TreeLevel.SMALL_TREE = new TreeLevel("small_tree", Effects.AMBIENT_PORTAL, Effects.TREE_RED_SWAG, null, TreeLevel.TREE, small_delay, smallLevelUp, new StructureTemplate(new HashMap<Vector, Material>() {
             private static final long serialVersionUID = 1L;
 
             {
@@ -259,7 +255,7 @@ public class Main extends JavaPlugin {
             }
         }));
 
-        TreeLevel.SAPLING = new TreeLevel("sapling", Effects.AMBIENT_SAPLING, null, null, TreeLevel.SMALL_TREE, sapling_delay, sapling_levelup, new StructureTemplate(new HashMap<Vector, Material>() {
+        TreeLevel.SAPLING = new TreeLevel("sapling", Effects.AMBIENT_SAPLING, null, null, TreeLevel.SMALL_TREE, sapling_delay, saplingLevelUp, new StructureTemplate(new HashMap<Vector, Material>() {
             private static final long serialVersionUID = 1L;
 
             {

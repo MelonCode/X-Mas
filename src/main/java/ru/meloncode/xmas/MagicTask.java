@@ -1,21 +1,24 @@
 package ru.meloncode.xmas;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.scheduler.BukkitRunnable;
 
 class MagicTask extends BukkitRunnable {
 
+    private final Main xmas;
+
+    MagicTask(Main main) {
+        this.xmas = main;
+    }
+
     @Override
     public void run() {
-        for (MagicTree tree : XMas.getAllTrees()) {
-            if (Main.EVENT_IN_PROGRESS)
+        if (Main.inProgress)
+            for (MagicTree tree : XMas.getAllTrees()) {
                 tree.update();
-            if (Main.AUTO_END && Main.END_TIME < System.currentTimeMillis()) {
-                Main.EVENT_IN_PROGRESS = false;
-                cancel();
-                Bukkit.broadcastMessage(ChatColor.GREEN + LocaleManager.HAPPY_NEW_YEAR);
             }
+        if ((Main.autoEnd && Main.endTime < System.currentTimeMillis()) || !xmas.inProgress) {
+            xmas.end();
+            cancel();
         }
     }
 }

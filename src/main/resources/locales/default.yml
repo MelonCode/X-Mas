@@ -6,7 +6,7 @@
 ##  ##  ## ##     ## ##    ##  ##   ###  ##  ##   ### ##    ##  
  ###  ###  ##     ## ##     ## ##    ## #### ##    ##  ######    
 
-# EN: DO NOT TRY TO EDIT THIS FILE. ANYWAY IT WILL PURGED.
+# EN: DO NOT TRY TO EDIT THIS FILE. IT WILL BE PURGED.
 # EN: If you want to edit messages - use en.yml or define your one.
 # EN: Don't forget to set your lang in config.yml
 
@@ -45,3 +45,12 @@ crystal:
  lore: 
   - Concentrated Christmas Spirit
   - Use it on Sapling to fill it with magic!
+command:
+ help:
+   - '&2Use &c/xmas &2to show plugin version and status'
+   - '&2Use &c/xmas give &2<Name> to give crystal somebody'
+   - '&2Use &c/xmas gifts &2to spawn some presents under trees!'
+   - '&2Use &c/xmas end &2to set plugin into ending mode'
+ player-offline: '&cPlayer not found'
+ no-player-name: '&6Missing player name'
+ giveaway: '&cHo! &2Ho! &cHo! &3Looks like it\s time to check presents!'

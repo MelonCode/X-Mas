@@ -47,7 +47,7 @@ class XMas {
             if (skull.getSkullType() == SkullType.PLAYER) {
                 if (Main.getHeads().contains(skull.getOwner())) {
                     Location loc = block.getLocation();
-                    if ((Main.RANDOM.nextFloat()) < Main.LUCK_CHANCE || !Main.LUCKCHANCEENABLED) {
+                    if ((Main.RANDOM.nextFloat()) < Main.LUCK_CHANCE || !Main.LUCK_CHANCE_ENABLED) {
                         loc.getWorld().dropItemNaturally(loc, new ItemStack(Main.gifts.get(Main.RANDOM.nextInt(Main.gifts.size()))));
                         Effects.TREE_SWAG.playEffect(loc);
                         TextUtils.sendMessage(player, LocaleManager.GIFT_LUCK);

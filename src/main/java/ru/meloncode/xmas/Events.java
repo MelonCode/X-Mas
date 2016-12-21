@@ -59,7 +59,7 @@ class Events implements Listener {
             if (MagicTree.isBlockBelongs(block)) {
                 event.setCancelled(true);
                 MagicTree tree = MagicTree.getTreeByBlock(block);
-                if (Main.EVENT_IN_PROGRESS) {
+                if (Main.inProgress) {
                     if (tree.getLevel().hasNext()) {
                         if (tree.canLevelUp()) {
                             if (!tree.tryLevelUp()) {
@@ -106,7 +106,7 @@ class Events implements Listener {
                     if (block.getData() == (byte) 1) {
                         ItemStack is = event.getItem();
                         if (is != null)
-                            if (!(Main.AUTO_END && System.currentTimeMillis() > Main.END_TIME)) {
+                            if (Main.inProgress) {
                                 if (XMas.getTreesPlayerOwn(player).size() < Main.MAX_TREE_COUNT) {
                                     if (is.getType() == XMas.XMAS_CRYSTAL.getType() && is.hasItemMeta() && is.getItemMeta().hasLore()) {
                                         ItemMeta im = is.getItemMeta();
@@ -199,15 +199,15 @@ class Events implements Listener {
             MagicTree tree = MagicTree.getTreeByBlock(block);
             switch (block.getType()) {
                 case LOG:
-                    if (player.getUniqueId().equals(tree.getOwner())) {
-                        if (Main.EVENT_IN_PROGRESS)
+                    if (player.getUniqueId().equals(tree.getOwner()) || player.hasPermission("xmas.admin")) {
+                        if (Main.inProgress)
                             if (destroyers.containsKey(player.getUniqueId()) && System.currentTimeMillis() - destroyers.get(player.getUniqueId()) <= 10000) {
                                 XMas.removeTree(tree);
-                                if (Main.EVENT_IN_PROGRESS)
+                                if (Main.inProgress)
                                     TextUtils.sendMessage(player, ChatColor.DARK_RED + LocaleManager.MONSTER);
                             } else {
                                 destroyers.put(player.getUniqueId(), System.currentTimeMillis());
-                                if (Main.EVENT_IN_PROGRESS)
+                                if (Main.inProgress)
                                     TextUtils.sendMessage(player, ChatColor.RED + LocaleManager.DESTROY_WARNING);
                                 TextUtils.sendMessage(player, ChatColor.DARK_RED + LocaleManager.DESTROY_TUT);
                             }
@@ -220,23 +220,23 @@ class Events implements Listener {
                     break;
                 case LEAVES:
                 case GLOWSTONE:
-                    if (Main.EVENT_IN_PROGRESS)
+                    if (Main.inProgress)
                         TextUtils.sendMessage(player, ChatColor.DARK_GREEN + LocaleManager.DESTROY_LEAVES_SANTA);
-                    if (player.getUniqueId().equals(tree.getOwner())) {
+                    if (player.getUniqueId().equals(tree.getOwner()) || player.hasPermission("xmas.admin")) {
                         TextUtils.sendMessage(player, ChatColor.RED + LocaleManager.DESTROY_LEAVES_TUT);
                     } else {
                         TextUtils.sendMessage(player, LocaleManager.DESTROY_FAIL_OWNER);
                     }
                     break;
                 case SAPLING:
-                    if (player.getUniqueId().equals(tree.getOwner())) {
-                        if (Main.EVENT_IN_PROGRESS) {
+                    if (player.getUniqueId().equals(tree.getOwner()) || player.hasPermission("xmas.admin")) {
+                        if (Main.inProgress) {
                             if (destroyers.containsKey(player.getUniqueId()) && System.currentTimeMillis() - destroyers.get(player.getUniqueId()) <= 10000) {
                                 XMas.removeTree(tree);
                                 TextUtils.sendMessage(player, ChatColor.RED + LocaleManager.MONSTER);
                             } else {
                                 destroyers.put(player.getUniqueId(), System.currentTimeMillis());
-                                if (Main.EVENT_IN_PROGRESS)
+                                if (Main.inProgress)
                                     TextUtils.sendMessage(player, ChatColor.RED + LocaleManager.DESTROY_SAPLING);
                                 TextUtils.sendMessage(player, ChatColor.DARK_RED + LocaleManager.DESTROY_TUT);
                             }

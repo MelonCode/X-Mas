@@ -1,4 +1,7 @@
 core:
+#Plugin will automatically disabled after date in holiday-ends if it's enabled
+#You can also disable plugin by using /xmas end
+#In disabled mode players cannot create new trees, but can collect their trees and get resources back (configurable)
  plugin-enabled: true
  locale: en
 #Max tree count per player

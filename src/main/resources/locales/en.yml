@@ -24,9 +24,24 @@ messages:
   destroy-complete: You're MONSTER!
  gift:
   luck-message: _UNUSED
-  unluck-message: Probably Santa has put you in his blacklist. I hope you're lucky next time!
+  unluck-message: Probably Santa has put you in blacklist. I hope you're lucky next time!
 crystal:
  name: Christmas Crystal
  lore: 
   - Concentrated Christmas Spirit
-  - Use it on Sapling to fill it with magic! 
+  - Use it on Sapling to fill it with magic!
+help:
+  - 'Use /xmas to show plugin version and status'
+  - 'Use /xmas give <Name> to give crystal somebody'
+  - 'Use /xmas gifts to spawn some presents under every Christmas Tree!'
+  - 'Use /xmas end to set plugin into ending mode'
+
+command:
+ help:
+   - '&2Use &c/xmas &2to show plugin version and status'
+   - '&2Use &c/xmas give &2<Name> to give crystal somebody'
+   - '&2Use &c/xmas gifts &2to spawn some presents under trees!'
+   - '&2Use &c/xmas end &2to set plugin into ending mode'
+ player-offline: '&cPlayer not found'
+ no-player-name: '&6Missing player name'
+ giveaway: '&cHo! &2Ho! &cHo! &3Looks like its time to check presents!'
