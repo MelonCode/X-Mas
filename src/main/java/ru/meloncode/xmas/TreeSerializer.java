@@ -1,7 +1,14 @@
 package ru.meloncode.xmas;
 
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.plugin.java.JavaPlugin;
 import ru.meloncode.xmas.utils.ConfigUtils;
 import ru.meloncode.xmas.utils.TextUtils;
 
@@ -15,37 +22,43 @@ class TreeSerializer {
     private static final File treesFile = new File(Main.getInstance().getDataFolder() + "/trees.yml");
     private static final FileConfiguration trees = ConfigUtils.loadConfig(treesFile);
 
-    public static void loadTrees() {
+    public static void loadTrees(JavaPlugin plugin, World world) {
         try {
             UUID owner;
             UUID treeUID;
             TreeLevel level;
             int x, y, z;
-            World world;
             Location loc;
             if (trees.getConfigurationSection("trees") != null && trees.getConfigurationSection("trees").getKeys(false).size() > 0) {
+
                 for (String cKey : trees.getConfigurationSection("trees").getKeys(false)) {
-                    treeUID = UUID.fromString(cKey);
-                    owner = UUID.fromString(trees.getString("trees." + cKey + ".owner"));
-                    level = TreeLevel.fromString(trees.getString("trees." + cKey + ".level"));
-                    world = Bukkit.getWorld(trees.getString("trees." + cKey + ".loc.world"));
-                    x = trees.getInt("trees." + cKey + ".loc.x");
-                    y = trees.getInt("trees." + cKey + ".loc.y");
-                    z = trees.getInt("trees." + cKey + ".loc.z");
-                    loc = new Location(world, x, y, z);
-                    Map<Material, Integer> requirements;
-                    if (trees.getConfigurationSection("trees." + cKey + ".levelup") != null) {
-                        requirements = convertRequirementsMap(trees.getConfigurationSection("trees." + cKey + ".levelup").getValues(false));
-                    } else {
-                        requirements = new HashMap<>();
+                    if (world.getName().equals(trees.getString("trees." + cKey + ".loc.world"))) {
+                        try {
+                            treeUID = UUID.fromString(cKey);
+                            owner = UUID.fromString(trees.getString("trees." + cKey + ".owner"));
+                            level = TreeLevel.fromString(trees.getString("trees." + cKey + ".level"));
+                            x = trees.getInt("trees." + cKey + ".loc.x");
+                            y = trees.getInt("trees." + cKey + ".loc.y");
+                            z = trees.getInt("trees." + cKey + ".loc.z");
+                            loc = new Location(world, x, y, z);
+                            Map<Material, Integer> requirements;
+                            if (trees.getConfigurationSection("trees." + cKey + ".levelup") != null) {
+                                requirements = convertRequirementsMap(trees.getConfigurationSection("trees." + cKey + ".levelup").getValues(false));
+                            } else {
+                                requirements = new HashMap<>();
+                            }
+                            XMas.addMagicTree(new MagicTree(owner, treeUID, level, loc, requirements));
+                        } catch (Exception e) {
+                            plugin.getLogger().severe(String.format("Error while loading tree `%s`", cKey));
+                            e.printStackTrace();
+                            System.out.println("================================================");
+                        }
                     }
-                    XMas.addMagicTree(new MagicTree(owner, treeUID, level, loc, requirements));
                 }
-            } else {
-                TextUtils.sendConsoleMessage("No trees to load");
             }
         } catch (Exception e) {
             TextUtils.sendConsoleMessage(ChatColor.DARK_RED + "ERROR WHILE LOADING TREES");
+            e.printStackTrace();
         }
 
     }

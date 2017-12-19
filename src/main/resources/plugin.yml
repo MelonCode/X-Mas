@@ -1,6 +1,8 @@
 name: X-Mas
 version: ${project.version}
 main: ru.meloncode.xmas.Main
+load: POSTWORLD
+softdepend: [Multiverse-Core, PlotMe, PlotSquared, Plotz]
 commands:
  xmas:
   usage: Use /<command> help to see help

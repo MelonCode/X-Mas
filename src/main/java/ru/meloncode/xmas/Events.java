@@ -28,6 +28,8 @@ class Events implements Listener {
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
     }
 
+
+
     @EventHandler
     public void onPlayerOpenPresent(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {

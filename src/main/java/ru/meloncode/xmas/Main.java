@@ -1,11 +1,13 @@
 package ru.meloncode.xmas;
 
 import com.google.common.collect.Lists;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.Plugin;
@@ -18,7 +20,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Main extends JavaPlugin {
+public class Main extends JavaPlugin implements Listener {
 
     // Yeah. That's as it should be.
     static final Random RANDOM = new Random(Calendar.getInstance().get(Calendar.YEAR));
@@ -75,7 +77,10 @@ public class Main extends JavaPlugin {
             TextUtils.sendConsoleMessage("Unable to load date");
         }
         defineTreeLevels();
-        TreeSerializer.loadTrees();
+        for (World world : getServer().getWorlds()) {
+            TreeSerializer.loadTrees(this, world);
+        }
+
         LocaleManager.loadLocale(locale);
         heads = config.getStringList("xmas.presents");
         if (heads.size() == 0) {
@@ -118,11 +123,24 @@ public class Main extends JavaPlugin {
         new MagicTask(this).runTaskTimer(this, 5, UPDATE_SPEED);
         XMas.XMAS_CRYSTAL = new ItemMaker(Material.EMERALD, LocaleManager.CRYSTAL_NAME, LocaleManager.CRYSTAL_LORE).make();
 
-        ShapedRecipe grinderRecipe = new ShapedRecipe(XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
+        ShapedRecipe grinderRecipe = new ShapedRecipe(new NamespacedKey(this, "xmas"), XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
         getServer().addRecipe(grinderRecipe);
         XMasCommand.register(this);
         TextUtils.sendConsoleMessage(LocaleManager.PLUGIN_ENABLED);
     }
+
+    @EventHandler
+    public void onWorldLoad(WorldLoadEvent event) {
+        TreeSerializer.loadTrees(this, event.getWorld());
+    }
+
+    @EventHandler
+    public void onWorldUnload(WorldUnloadEvent event) {
+        for (MagicTree magicTree : XMas.getAllTrees()) {
+            if (magicTree.getLocation().getWorld() == event.getWorld()) magicTree.unbuild();
+        }
+    }
+
 
     @Override
     public void onDisable() {
