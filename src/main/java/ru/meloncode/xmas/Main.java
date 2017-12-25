@@ -123,7 +123,13 @@ public class Main extends JavaPlugin implements Listener {
         new MagicTask(this).runTaskTimer(this, 5, UPDATE_SPEED);
         XMas.XMAS_CRYSTAL = new ItemMaker(Material.EMERALD, LocaleManager.CRYSTAL_NAME, LocaleManager.CRYSTAL_LORE).make();
 
-        ShapedRecipe grinderRecipe = new ShapedRecipe(new NamespacedKey(this, "xmas"), XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
+        ShapedRecipe grinderRecipe;
+        try {
+            Class.forName("org.bukkit.NamespacedKey"); // Checking it exists
+            grinderRecipe = new ShapedRecipe(new NamespacedKey(this, "xmas"), XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
+        } catch (Exception e) {
+            grinderRecipe = new ShapedRecipe(XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
+        }
         getServer().addRecipe(grinderRecipe);
         XMasCommand.register(this);
         TextUtils.sendConsoleMessage(LocaleManager.PLUGIN_ENABLED);
