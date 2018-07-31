@@ -1,0 +1,47 @@
+#_UNUSED is a keyword to disable message.
+
+#For chat
+plugin-name: X-Mas
+
+messages:
+ plugin-enabled: Boldog karácsonyt és boldog új évet!
+ timeout: Az ünnepek véget értek! Viszlát, jövőre!
+ final-wish: Boldog új évet mindenkinek, barátaim!
+
+ tree:
+  grow-lvl-ready: Woosh! Nyomd meg a jobb egérgombot, hogy a fák növekedjenek!
+  grow-lvl-progress: _UNUSED
+  grow-req-list-title: Kötelező
+  grow-not-enough-place: Nincs elég hely ahhoz, hogy növekedjen
+  grow-lvl-max: Ez a fa elérte a maximális szintjét!
+  tree-limit: Hé, ne légy mohó! (Fa korlát)
+  destroy-sapling: Ez a csoda nem csökken. Biztos vagy ebben? 
+  destroy-leaves-santa: Mikulás lát mindent. 
+  destroy-leaves-tut: Egy fa megsemmisítéséhez - vágd ki a fát.
+  destroy-warning: Biztos vagy ebben? A fejlődésed elvész, és nincs erőforrás.
+  destroy-tut: A fát megsemmisíteni, vágd ki újra.
+  destroy-fail-owner: Ez nem a te fád!
+  destroy-complete: SZÖRNY vagy!
+ gift:
+  luck-message: _UNUSED
+  unluck-message: Valószínűleg a Mikulás a feketelistába tette. Remélem, szerencséje lesz legközelebb!
+crystal:
+ name: Karácsonyi kristály
+ lore: 
+  - Koncentrált karácsonyi szellem
+  - Használd a fa fa-csemetékhez, hogy kitöltse mágiával!
+help:
+  - 'Használd /xmas a plugin verziójának és állapotának megjelenítése'
+  - 'Használd /xmas give <név>, hogy valakinek kristályt adj'
+  - 'Használd /xmas ajándékok, hogy minden karácsonyi fa alá ajándékozzon néhány ajándékot!'
+  - 'Használd /xmas véget a bővítmény beillesztésének módjába'
+
+command:
+ help:
+   - '&2Használd &c/xmas &2a plugin verziójának és állapotának megjelenítése'
+   - '&2Használd &c/xmas give &2<név>, hogy valakinek kristályt adj'
+   - '&2Használd &c/xmas gifts &2hogy fák alatt ajándékozzon néhány ajándékot!'
+   - '&2Használd &c/xmas end &2a bővítmény beillesztése véges módba'
+ player-offline: '&cA játékos nem található'
+ no-player-name: '&6Hiányzó játékos név'
+giveaway: '&cHo! &2Ho! &cHo! &3Úgy néz ki, itt az ideje, hogy ellenőrizze ajándékokat!'
