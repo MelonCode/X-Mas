@@ -6,6 +6,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
@@ -35,18 +36,18 @@ public class ItemMaker {
     }
 
     public ItemMaker(Material material, int amount, short durability) {
-        is = new ItemStack(material, amount, durability);
+        is = new ItemStack(material, amount);
         im = is.getItemMeta();
     }
 
     public ItemMaker(Material material, int amount, short durability, String name) {
-        is = new ItemStack(material, amount, durability);
+        is = new ItemStack(material, amount);
         im = is.getItemMeta();
         im.setDisplayName(name);
     }
 
     public ItemMaker(Material material, int amount, short durability, String name, List<String> lore) {
-        is = new ItemStack(material, amount, durability);
+        is = new ItemStack(material, amount);
         im = is.getItemMeta();
         im.setDisplayName(name);
         im.setLore(lore);
@@ -58,7 +59,8 @@ public class ItemMaker {
     }
 
     public ItemMaker setDurability(short data) {
-        is.setDurability(data);
+        //is.setDurability(data);
+        ((Damageable) is).setDamage(data);
         return this;
     }
 

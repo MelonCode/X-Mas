@@ -9,6 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -97,12 +98,9 @@ public class Main extends JavaPlugin implements Listener {
 
                     Material material;
                     int amount = 1;
-                    short data = 0;
-
                     material = Material.valueOf(split[0]);
                     if (split.length > 1) amount = Integer.parseInt(split[1]);
-                    if (split.length > 2) data = Short.parseShort(split[2]);
-                    gifts.add(new ItemStack(material, amount, data));
+                    gifts.add(new ItemStack(material, amount));
                 } else {
                     gifts.add(new ItemStack(Material.valueOf(cItem)));
                 }
@@ -124,13 +122,22 @@ public class Main extends JavaPlugin implements Listener {
         XMas.XMAS_CRYSTAL = new ItemMaker(Material.EMERALD, LocaleManager.CRYSTAL_NAME, LocaleManager.CRYSTAL_LORE).make();
 
         ShapedRecipe grinderRecipe;
-        try {
-            Class.forName("org.bukkit.NamespacedKey"); // Checking it exists
-            grinderRecipe = new ShapedRecipe(new NamespacedKey(this, "xmas"), XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
-        } catch (Exception e) {
-            grinderRecipe = new ShapedRecipe(XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
+        grinderRecipe = new ShapedRecipe(new NamespacedKey(this, "xmas"), XMas.XMAS_CRYSTAL).shape("#d#", "ded", "#d#").setIngredient('d', Material.DIAMOND).setIngredient('e', Material.EMERALD);
+        Iterator<Recipe> recipes = getServer().recipeIterator();
+        boolean registered = false;
+        while (recipes.hasNext()) {
+            Recipe recipe = recipes.next();
+            if (recipe.equals(grinderRecipe)) {
+                registered = true;
+                break;
+            }
+
         }
-        getServer().addRecipe(grinderRecipe);
+        try {
+            if (!registered)
+                getServer().addRecipe(grinderRecipe);
+        } catch (Exception e) {
+        }
         XMasCommand.register(this);
         TextUtils.sendConsoleMessage(LocaleManager.PLUGIN_ENABLED);
     }
@@ -183,39 +190,39 @@ public class Main extends JavaPlugin implements Listener {
         Map<Material, Integer> smallLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("small_tree.lvlup").getValues(false));
         Map<Material, Integer> treeLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("tree.lvlup").getValues(false));
 
-        TreeLevel.MAGIC_TREE = new TreeLevel("magic_tree", Effects.TREE_WHITE_AMBIENT, Effects.TREE_SWAG, null, null, magic_delay, Collections.EMPTY_MAP, new StructureTemplate(new HashMap<Vector, Material>() {
+        TreeLevel.MAGIC_TREE = new TreeLevel("magic_tree", Effects.TREE_WHITE_AMBIENT, Effects.TREE_SWAG, null, null, magic_delay, Collections.emptyMap(), new StructureTemplate(new HashMap<Vector, Material>() {
             private static final long serialVersionUID = 1L;
 
             {
-                put(new Vector(0, -1, 0), Material.GRASS);
+                put(new Vector(0, -1, 0), Material.GRASS_BLOCK);
                 for (int i = 0; i <= 5; i++) {
-                    put(new Vector(0, i, 0), Material.LOG);
+                    put(new Vector(0, i, 0), Material.SPRUCE_LOG);
                     if (i >= 2) {
-                        put(new Vector(1, i, 0), Material.LEAVES);
-                        put(new Vector(-1, i, 0), Material.LEAVES);
-                        put(new Vector(0, i, 1), Material.LEAVES);
-                        put(new Vector(0, i, -1), Material.LEAVES);
+                        put(new Vector(1, i, 0), Material.SPRUCE_LEAVES);
+                        put(new Vector(-1, i, 0), Material.SPRUCE_LEAVES);
+                        put(new Vector(0, i, 1), Material.SPRUCE_LEAVES);
+                        put(new Vector(0, i, -1), Material.SPRUCE_LEAVES);
                     }
                 }
-                put(new Vector(0, 6, 0), Material.LEAVES);
+                put(new Vector(0, 6, 0), Material.SPRUCE_LEAVES);
 
                 put(new Vector(0, 7, 0), Material.GLOWSTONE);// Star
 
-                put(new Vector(1, 4, 0), Material.LEAVES);
-                put(new Vector(1, 4, 1), Material.LEAVES);
-                put(new Vector(1, 4, -1), Material.LEAVES);
-                put(new Vector(-1, 4, -1), Material.LEAVES);
-                put(new Vector(-1, 4, 1), Material.LEAVES);
+                put(new Vector(1, 4, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(1, 4, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(1, 4, -1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 4, -1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 4, 1), Material.SPRUCE_LEAVES);
 
-                put(new Vector(1, 2, 1), Material.LEAVES);
-                put(new Vector(-1, 2, -1), Material.LEAVES);
-                put(new Vector(1, 2, -1), Material.LEAVES);
-                put(new Vector(-1, 2, 1), Material.LEAVES);
+                put(new Vector(1, 2, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 2, -1), Material.SPRUCE_LEAVES);
+                put(new Vector(1, 2, -1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 2, 1), Material.SPRUCE_LEAVES);
 
-                put(new Vector(2, 2, 0), Material.LEAVES);
-                put(new Vector(0, 2, 2), Material.LEAVES);
-                put(new Vector(-2, 2, 0), Material.LEAVES);
-                put(new Vector(0, 2, -2), Material.LEAVES);
+                put(new Vector(2, 2, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 2, 2), Material.SPRUCE_LEAVES);
+                put(new Vector(-2, 2, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 2, -2), Material.SPRUCE_LEAVES);
             }
         }));
 
@@ -223,31 +230,31 @@ public class Main extends JavaPlugin implements Listener {
             private static final long serialVersionUID = 1L;
 
             {
-                put(new Vector(0, -1, 0), Material.GRASS);
-                put(new Vector(0, 0, 0), Material.LOG);
-                put(new Vector(0, 1, 0), Material.LOG);
-                put(new Vector(0, 2, 0), Material.LOG);
-                put(new Vector(0, 3, 0), Material.LOG);
-                put(new Vector(0, 4, 0), Material.LOG);
-                put(new Vector(0, 5, 0), Material.LEAVES);
-                put(new Vector(1, 4, 0), Material.LEAVES);
-                put(new Vector(0, 4, 1), Material.LEAVES);
-                put(new Vector(-1, 4, 0), Material.LEAVES);
-                put(new Vector(0, 4, -1), Material.LEAVES);
+                put(new Vector(0, -1, 0), Material.GRASS_BLOCK);
+                put(new Vector(0, 0, 0), Material.SPRUCE_LOG);
+                put(new Vector(0, 1, 0), Material.SPRUCE_LOG);
+                put(new Vector(0, 2, 0), Material.SPRUCE_LOG);
+                put(new Vector(0, 3, 0), Material.SPRUCE_LOG);
+                put(new Vector(0, 4, 0), Material.SPRUCE_LOG);
+                put(new Vector(0, 5, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(1, 4, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 4, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 4, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 4, -1), Material.SPRUCE_LEAVES);
 
-                put(new Vector(1, 1, 0), Material.LEAVES);
-                put(new Vector(0, 1, 1), Material.LEAVES);
-                put(new Vector(1, 1, 1), Material.LEAVES);
-                put(new Vector(-1, 1, 0), Material.LEAVES);
-                put(new Vector(0, 1, -1), Material.LEAVES);
-                put(new Vector(-1, 1, -1), Material.LEAVES);
-                put(new Vector(-1, 1, 1), Material.LEAVES);
-                put(new Vector(1, 1, -1), Material.LEAVES);
+                put(new Vector(1, 1, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 1, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(1, 1, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 1, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 1, -1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 1, -1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 1, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(1, 1, -1), Material.SPRUCE_LEAVES);
 
-                put(new Vector(1, 2, 0), Material.LEAVES);
-                put(new Vector(0, 2, 1), Material.LEAVES);
-                put(new Vector(-1, 2, 0), Material.LEAVES);
-                put(new Vector(0, 2, -1), Material.LEAVES);
+                put(new Vector(1, 2, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 2, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 2, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 2, -1), Material.SPRUCE_LEAVES);
 
             }
         }));
@@ -256,25 +263,25 @@ public class Main extends JavaPlugin implements Listener {
             private static final long serialVersionUID = 1L;
 
             {
-                put(new Vector(0, -1, 0), Material.GRASS);
-                put(new Vector(0, 0, 0), Material.LOG);
-                put(new Vector(0, 1, 0), Material.LOG);
-                put(new Vector(0, 2, 0), Material.LEAVES);
-                put(new Vector(0, 3, 0), Material.LEAVES);
+                put(new Vector(0, -1, 0), Material.GRASS_BLOCK);
+                put(new Vector(0, 0, 0), Material.SPRUCE_LOG);
+                put(new Vector(0, 1, 0), Material.SPRUCE_LOG);
+                put(new Vector(0, 2, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 3, 0), Material.SPRUCE_LEAVES);
 
-                put(new Vector(1, 1, 0), Material.LEAVES);
-                put(new Vector(0, 1, 1), Material.LEAVES);
-                put(new Vector(1, 1, 1), Material.LEAVES);
-                put(new Vector(-1, 1, 0), Material.LEAVES);
-                put(new Vector(0, 1, -1), Material.LEAVES);
-                put(new Vector(-1, 1, -1), Material.LEAVES);
-                put(new Vector(-1, 1, 1), Material.LEAVES);
-                put(new Vector(1, 1, -1), Material.LEAVES);
+                put(new Vector(1, 1, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 1, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(1, 1, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 1, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 1, -1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 1, -1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 1, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(1, 1, -1), Material.SPRUCE_LEAVES);
 
-                put(new Vector(1, 2, 0), Material.LEAVES);
-                put(new Vector(0, 2, 1), Material.LEAVES);
-                put(new Vector(-1, 2, 0), Material.LEAVES);
-                put(new Vector(0, 2, -1), Material.LEAVES);
+                put(new Vector(1, 2, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 2, 1), Material.SPRUCE_LEAVES);
+                put(new Vector(-1, 2, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 2, -1), Material.SPRUCE_LEAVES);
 
             }
         }));
@@ -283,8 +290,8 @@ public class Main extends JavaPlugin implements Listener {
             private static final long serialVersionUID = 1L;
 
             {
-                put(new Vector(0, -1, 0), Material.GRASS);
-                put(new Vector(0, 0, 0), Material.SAPLING);
+                put(new Vector(0, -1, 0), Material.GRASS_BLOCK);
+                put(new Vector(0, 0, 0), Material.SPRUCE_SAPLING);
             }
         }));
     }

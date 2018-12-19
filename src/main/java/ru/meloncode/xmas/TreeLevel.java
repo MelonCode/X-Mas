@@ -10,9 +10,8 @@ public class TreeLevel {
     public static TreeLevel TREE;
     public static TreeLevel SMALL_TREE;
     public static TreeLevel SAPLING;
-
-    private final String levelName;
     final TreeLevel nextLevel;
+    private final String levelName;
     private final long giftDelay;
     private final Map<Material, Integer> levelupRequirements;
     private final StructureTemplate structure;

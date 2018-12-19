@@ -16,7 +16,7 @@ class MagicTask extends BukkitRunnable {
             for (MagicTree tree : XMas.getAllTrees()) {
                 tree.update();
             }
-        if ((Main.autoEnd && Main.endTime < System.currentTimeMillis()) || !xmas.inProgress) {
+        if ((Main.autoEnd && Main.endTime < System.currentTimeMillis()) || !Main.inProgress) {
             xmas.end();
             cancel();
         }

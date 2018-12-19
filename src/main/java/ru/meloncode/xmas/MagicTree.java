@@ -3,6 +3,7 @@ package ru.meloncode.xmas;
 import org.bukkit.*;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.block.*;
+import org.bukkit.block.data.Rotatable;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -84,7 +85,7 @@ public class MagicTree {
                 levelupRequirements.put(material, levelupRequirements.get(material) - 1);
             }
             for (Block block : blocks) {
-                if (block.getType() == Material.LEAVES || block.getType() == Material.SAPLING) {
+                if (block.getType() == Material.SPRUCE_LEAVES || block.getType() == Material.SPRUCE_SAPLING) {
                     Effects.GROW.playEffect(block.getLocation());
                     for (int i = 0; i <= 3; i++)
                         location.getWorld().playSound(location, Sound.ENTITY_PLAYER_LEVELUP, 1, Main.RANDOM.nextFloat() + 0.2f);
@@ -108,12 +109,12 @@ public class MagicTree {
 
             if (blocks != null && blocks.size() > 0) {
                 for (Block block : blocks) {
-                    if (block.getType() == Material.LEAVES) {
+                    if (block.getType() == Material.SPRUCE_LEAVES) {
                         if (level.getSwagEffect() != null) {
                             level.getSwagEffect().playEffect(block.getLocation());
                         }
                     }
-                    if (block.getType() == Material.LOG) {
+                    if (block.getType() == Material.SPRUCE_LOG) {
                         if (level.getBodyEffect() != null) {
                             level.getBodyEffect().playEffect(block.getLocation());
                         }
@@ -164,7 +165,7 @@ public class MagicTree {
                 blockAssociation.remove(block);
             }
         }
-        location.clone().add(0, -1, 0).getBlock().setType(Material.GRASS);
+        location.clone().add(0, -1, 0).getBlock().setType(Material.GRASS_BLOCK);
     }
 
     public void build() {
@@ -176,16 +177,15 @@ public class MagicTree {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void spawnPresent() {
         Location presentLoc = location.clone().add(-1 + Main.RANDOM.nextInt(3), 0, -1 + Main.RANDOM.nextInt(3));
 
         Block pBlock = presentLoc.getBlock();
         if (presents.size() <= 3) {
-            if (!pBlock.getType().isSolid() && pBlock.getType() != Material.SAPLING) {
-                pBlock.setType(Material.SKULL);
-                pBlock.setData((byte) 0x1);
+            if (!pBlock.getType().isSolid() && pBlock.getType() != Material.SPRUCE_SAPLING) {
+                pBlock.setType(Material.PLAYER_HEAD);
                 BlockState state = pBlock.getState();
-
                 if (state instanceof Skull) {
                     Skull skull = (Skull) state;
                     BlockFace face;
@@ -193,9 +193,13 @@ public class MagicTree {
                         face = BlockFace.values()[Main.RANDOM.nextInt(BlockFace.values().length)];
                     }
                     while (face == BlockFace.DOWN || face == BlockFace.UP || face == BlockFace.SELF);
-                    skull.setRotation(face);
-                    skull.setSkullType(SkullType.PLAYER);
-                    skull.setOwner(Main.getHeads().get(Main.RANDOM.nextInt(Main.getHeads().size())));
+                    //skull.setRotation(face);
+                    Rotatable skullRotatable = (Rotatable) skull.getBlockData();
+                    skullRotatable.setRotation(face);
+                    //skull.setSkullType(SkullType.PLAYER);
+                    skull.setType(Material.PLAYER_HEAD);
+                    //skull.setOwner();
+                    skull.setOwningPlayer(Bukkit.getOfflinePlayer(Main.getHeads().get(Main.RANDOM.nextInt(Main.getHeads().size()))));
                     skull.update(true);
                 }
             }
@@ -218,23 +222,23 @@ public class MagicTree {
         unbuild();
         // Bad code. Need it fast.
         Block bl;
-        if ((bl = location.clone().add(1, 0, 0).getBlock()).getType() == Material.SKULL)
+        if ((bl = location.clone().add(1, 0, 0).getBlock()).getType() == Material.PLAYER_HEAD)
             bl.setType(Material.AIR);
-        if ((bl = location.clone().add(-1, 0, 0).getBlock()).getType() == Material.SKULL)
+        if ((bl = location.clone().add(-1, 0, 0).getBlock()).getType() == Material.PLAYER_HEAD)
             bl.setType(Material.AIR);
-        if ((bl = location.clone().add(0, 0, 1).getBlock()).getType() == Material.SKULL)
+        if ((bl = location.clone().add(0, 0, 1).getBlock()).getType() == Material.PLAYER_HEAD)
             bl.setType(Material.AIR);
-        if ((bl = location.clone().add(0, 0, -1).getBlock()).getType() == Material.SKULL)
-            bl.setType(Material.AIR);
-
-        if ((bl = location.clone().add(1, 0, 1).getBlock()).getType() == Material.SKULL)
-            bl.setType(Material.AIR);
-        if ((bl = location.clone().add(-1, 0, -1).getBlock()).getType() == Material.SKULL)
+        if ((bl = location.clone().add(0, 0, -1).getBlock()).getType() == Material.PLAYER_HEAD)
             bl.setType(Material.AIR);
 
-        if ((bl = location.clone().add(-1, 0, 1).getBlock()).getType() == Material.SKULL)
+        if ((bl = location.clone().add(1, 0, 1).getBlock()).getType() == Material.PLAYER_HEAD)
             bl.setType(Material.AIR);
-        if ((bl = location.clone().add(1, 0, -1).getBlock()).getType() == Material.SKULL)
+        if ((bl = location.clone().add(-1, 0, -1).getBlock()).getType() == Material.PLAYER_HEAD)
+            bl.setType(Material.AIR);
+
+        if ((bl = location.clone().add(-1, 0, 1).getBlock()).getType() == Material.PLAYER_HEAD)
+            bl.setType(Material.AIR);
+        if ((bl = location.clone().add(1, 0, -1).getBlock()).getType() == Material.PLAYER_HEAD)
             bl.setType(Material.AIR);
         if (Main.resourceBack) {
             bl = location.getBlock();

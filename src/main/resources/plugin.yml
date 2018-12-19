@@ -2,6 +2,7 @@ name: X-Mas
 version: ${project.version}
 main: ru.meloncode.xmas.Main
 load: POSTWORLD
+api-version: 1.13
 softdepend: [Multiverse-Core, PlotMe, PlotSquared, Plotz]
 commands:
  xmas:

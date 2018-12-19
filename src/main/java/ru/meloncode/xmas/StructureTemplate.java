@@ -56,7 +56,6 @@ public class StructureTemplate {
             cLoc = start.clone().add(cVec);
             cBlock = cLoc.getBlock();
             cBlock.setType(get(cVec));
-            cBlock.setData((byte) 1);
             blocks.add(cBlock);
         }
 
