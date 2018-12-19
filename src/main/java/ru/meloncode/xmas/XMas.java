@@ -1,16 +1,20 @@
 package ru.meloncode.xmas;
 
+import net.minecraft.server.v1_13_R2.BlockPosition;
+import net.minecraft.server.v1_13_R2.TileEntitySkull;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.SkullType;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
+import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import ru.meloncode.xmas.utils.TextUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 class XMas {
@@ -38,15 +42,16 @@ class XMas {
         TreeSerializer.removeTree(tree);
         trees.remove(tree.getTreeUID());
     }
-
     public static void processPresent(Block block, Player player) {
-        if (block.getType() == Material.SKULL) {
+        if (block.getType() == Material.PLAYER_HEAD) {
             Skull skull = (Skull) block.getState();
-            if (skull.getSkullType() == SkullType.PLAYER) {
-                if (Main.getHeads().contains(skull.getOwner())) {
+            TileEntitySkull skullTile = (TileEntitySkull) ((CraftWorld)skull.getWorld()).getHandle().getTileEntity(new BlockPosition(skull.getX(), skull.getY(), skull.getZ()));
+            if(skullTile != null && skullTile.getGameProfile() != null) {
+                if (Main.getHeads().contains(skullTile.getGameProfile().getName())) {
                     Location loc = block.getLocation();
                     if ((Main.RANDOM.nextFloat()) < Main.LUCK_CHANCE || !Main.LUCK_CHANCE_ENABLED) {
-                        loc.getWorld().dropItemNaturally(loc, new ItemStack(Main.gifts.get(Main.RANDOM.nextInt(Main.gifts.size()))));
+                        loc.getWorld().dropItemNaturally(loc,
+                                new ItemStack(Main.gifts.get(Main.RANDOM.nextInt(Main.gifts.size()))));
                         Effects.TREE_SWAG.playEffect(loc);
                         TextUtils.sendMessage(player, LocaleManager.GIFT_LUCK);
                     } else {

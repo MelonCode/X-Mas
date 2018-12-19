@@ -11,7 +11,7 @@ core:
  holiday-ends:
   enabled: true
 #DD.MM.YYYY HH-MM-SS
-  date: 10-01-2018 03-33-33
+  date: 10-01-2019 03-33-33
 # if true - plugin will summon chest with spent resources under tree
   resource-back: true
   
@@ -64,7 +64,7 @@ xmas:
     DIAMOND: 3
     GOLD_INGOT: 5
     BLAZE_POWDER: 10
-    SNOW_BALL: 30
+    SNOWBALL: 30
   tree:
    gift-cooldown: 180
    lvlup:
