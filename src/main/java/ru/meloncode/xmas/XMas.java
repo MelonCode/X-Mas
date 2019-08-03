@@ -1,12 +1,12 @@
 package ru.meloncode.xmas;
 
-import net.minecraft.server.v1_13_R2.BlockPosition;
-import net.minecraft.server.v1_13_R2.TileEntitySkull;
+import net.minecraft.server.v1_14_R1.BlockPosition;
+import net.minecraft.server.v1_14_R1.TileEntitySkull;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
-import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_14_R1.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import ru.meloncode.xmas.utils.TextUtils;
@@ -46,8 +46,8 @@ class XMas {
         if (block.getType() == Material.PLAYER_HEAD) {
             Skull skull = (Skull) block.getState();
             TileEntitySkull skullTile = (TileEntitySkull) ((CraftWorld)skull.getWorld()).getHandle().getTileEntity(new BlockPosition(skull.getX(), skull.getY(), skull.getZ()));
-            if(skullTile != null && skullTile.getGameProfile() != null) {
-                if (Main.getHeads().contains(skullTile.getGameProfile().getName())) {
+            if(skullTile != null && skullTile.gameProfile != null) {
+                if (Main.getHeads().contains(skullTile.gameProfile.getName())) {
                     Location loc = block.getLocation();
                     if ((Main.RANDOM.nextFloat()) < Main.LUCK_CHANCE || !Main.LUCK_CHANCE_ENABLED) {
                         loc.getWorld().dropItemNaturally(loc,
