@@ -34,7 +34,7 @@ class Events implements Listener {
         if (event.getHand() == EquipmentSlot.OFF_HAND) return; //Event firing for both hands
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block block = event.getClickedBlock();
-            if (block.getType() == Material.PLAYER_HEAD) {
+            if (block != null && block.getType() == Material.PLAYER_HEAD) {
                 XMas.processPresent(block, event.getPlayer());
             }
         }
@@ -244,10 +244,6 @@ class Events implements Listener {
                     } else {
                         TextUtils.sendMessage(player, LocaleManager.DESTROY_FAIL_OWNER);
                     }
-
-                    break;
-                case PLAYER_HEAD:
-                    XMas.processPresent(block, player);
                     break;
                 default:
                     break;

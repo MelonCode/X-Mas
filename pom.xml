@@ -75,13 +75,6 @@
             <artifactId>bungeecord-api</artifactId>
             <version>1.14-SNAPSHOT</version>
         </dependency>
-        <!-- Spigot Binary-->
-        <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-binary</artifactId>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/Spigot-1.14.4-e5b1b5d-20190802-0923.jar</systemPath>
-        </dependency>
         <!-- Apache Commons 3-->
         <dependency>
             <groupId>org.apache.commons</groupId>
