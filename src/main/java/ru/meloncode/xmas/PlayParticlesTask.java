@@ -2,11 +2,11 @@ package ru.meloncode.xmas;
 
 import org.bukkit.scheduler.BukkitRunnable;
 
-class MagicTaskParticles extends BukkitRunnable {
+class PlayParticlesTask extends BukkitRunnable {
 
     private final Main xmas;
 
-    MagicTaskParticles(Main main) {
+    PlayParticlesTask(Main main) {
         this.xmas = main;
     }
 
@@ -16,9 +16,5 @@ class MagicTaskParticles extends BukkitRunnable {
             for (MagicTree tree : XMas.getAllTrees()) {
                 tree.playParticles();
             }
-        if ((Main.autoEnd && Main.endTime < System.currentTimeMillis()) || !Main.inProgress) {
-            xmas.end();
-            cancel();
-        }
     }
 }
