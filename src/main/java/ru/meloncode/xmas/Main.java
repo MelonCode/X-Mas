@@ -128,7 +128,7 @@ public class Main extends JavaPlugin implements Listener {
         LUCK_CHANCE = (float) config.getInt("xmas.luck.chance") / 100;
         new Events().registerListener();
         new MagicTask(this).runTaskTimer(this, 5, TASK_DELAY);
-        new MagicTaskParticles(this).runTaskTimer(this, 5, PARTICLES_DELAY);
+        new MagicTaskParticles(this).runTaskTimerAsynchronously(this, 5, PARTICLES_DELAY);
         XMas.XMAS_CRYSTAL = new ItemMaker(Material.EMERALD, LocaleManager.CRYSTAL_NAME, LocaleManager.CRYSTAL_LORE).make();
 
         ShapedRecipe grinderRecipe;

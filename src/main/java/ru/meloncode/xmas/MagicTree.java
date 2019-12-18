@@ -113,7 +113,7 @@ public class MagicTree {
     {
         if (blocks != null && blocks.size() > 0) {
             for (Block block : blocks) {
-                if(!block.getChunk().isLoaded())
+                if(!block.getWorld().isChunkLoaded(block.getX() / 16, block.getZ() / 16))
                     continue;
                 if (block.getType() == Material.SPRUCE_LEAVES) {
                     if (level.getSwagEffect() != null) {

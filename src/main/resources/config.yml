@@ -19,7 +19,9 @@ core:
  #I don't Recommend  to touch it.
  #20 = 1 update / sec
  #Can't be 0
- update-speed: 7 
+ update-speed: 7
+ task-delay: 7
+ particles-delay: 35
 xmas:
  luck:
   enabled: false
