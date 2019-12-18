@@ -106,22 +106,27 @@ public class MagicTree {
                 }
                 presentCounter--;
             }
+        }
+    }
 
-            if (blocks != null && blocks.size() > 0) {
-                for (Block block : blocks) {
-                    if (block.getType() == Material.SPRUCE_LEAVES) {
-                        if (level.getSwagEffect() != null) {
-                            level.getSwagEffect().playEffect(block.getLocation());
-                        }
+    public void playParticles()
+    {
+        if (blocks != null && blocks.size() > 0) {
+            for (Block block : blocks) {
+                if(!block.getChunk().isLoaded())
+                    continue;
+                if (block.getType() == Material.SPRUCE_LEAVES) {
+                    if (level.getSwagEffect() != null) {
+                        level.getSwagEffect().playEffect(block.getLocation());
                     }
-                    if (block.getType() == Material.SPRUCE_LOG) {
-                        if (level.getBodyEffect() != null) {
-                            level.getBodyEffect().playEffect(block.getLocation());
-                        }
+                }
+                if (block.getType() == Material.SPRUCE_LOG) {
+                    if (level.getBodyEffect() != null) {
+                        level.getBodyEffect().playEffect(block.getLocation());
                     }
-                    if (level.getAmbientEffect() != null) {
-                        level.getAmbientEffect().playEffect(location.clone().add(0, level.getTreeHeight(), 0));
-                    }
+                }
+                if (level.getAmbientEffect() != null) {
+                    level.getAmbientEffect().playEffect(location.clone().add(0, level.getTreeHeight(), 0));
                 }
             }
         }
