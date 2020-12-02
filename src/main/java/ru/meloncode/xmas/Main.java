@@ -34,6 +34,7 @@ public class Main extends JavaPlugin implements Listener {
     static long endTime;
     static boolean inProgress;
     private static int UPDATE_SPEED;
+    private static int PARTICLES_DELAY;
     private static List<String> heads;
     private static Plugin plugin;
     private FileConfiguration config;
@@ -67,6 +68,10 @@ public class Main extends JavaPlugin implements Listener {
             config.set("core.update-speed", 7);
             UPDATE_SPEED = 7;
         }
+        PARTICLES_DELAY = config.getInt("core.particles-delay");
+        if (PARTICLES_DELAY <= 0)
+            config.set("particles-delay", 35);
+        
         autoEnd = config.getBoolean("core.holiday-ends.enabled");
         resourceBack = config.getBoolean("core.holiday-ends.resource-back");
         MAX_TREE_COUNT = config.getInt("core.tree-limit");
@@ -119,6 +124,7 @@ public class Main extends JavaPlugin implements Listener {
         LUCK_CHANCE = (float) config.getInt("xmas.luck.chance") / 100;
         new Events().registerListener();
         new MagicTask(this).runTaskTimer(this, 5, UPDATE_SPEED);
+        new PlayParticlesTask(this).runTaskTimerAsynchronously(this, 5, PARTICLES_DELAY);
         XMas.XMAS_CRYSTAL = new ItemMaker(Material.EMERALD, LocaleManager.CRYSTAL_NAME, LocaleManager.CRYSTAL_LORE).make();
 
         ShapedRecipe grinderRecipe;
@@ -136,7 +142,7 @@ public class Main extends JavaPlugin implements Listener {
         try {
             if (!registered)
                 getServer().addRecipe(grinderRecipe);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         XMasCommand.register(this);
         TextUtils.sendConsoleMessage(LocaleManager.PLUGIN_ENABLED);

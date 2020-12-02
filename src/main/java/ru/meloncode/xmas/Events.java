@@ -261,4 +261,18 @@ class Events implements Listener {
         }
     }
 
+    @EventHandler
+    public void disableDecay(LeavesDecayEvent e)
+    {
+        if(e.isCancelled())
+            return;
+
+        if(e.getBlock().getType() != Material.SPRUCE_LEAVES)
+            return;
+
+        if (MagicTree.isBlockBelongs(e.getBlock().getLocation().getBlock()))
+            e.setCancelled(true);
+    }
+
+
 }
