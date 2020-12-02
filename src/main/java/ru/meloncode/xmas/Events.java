@@ -3,10 +3,14 @@ package ru.meloncode.xmas;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -37,6 +41,14 @@ class Events implements Listener {
             if (block != null && block.getType() == Material.PLAYER_HEAD) {
                 XMas.processPresent(block, event.getPlayer());
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onPlayerOpenPresent(BlockBreakEvent event) {
+        Block block = event.getBlock();
+        if (block != null && block.getType() == Material.PLAYER_HEAD) {
+            XMas.processPresent(block, event.getPlayer());
         }
     }
 
@@ -152,10 +164,9 @@ class Events implements Listener {
     @EventHandler
     public void onItemSpawn(ItemSpawnEvent event) {
         ItemStack item = event.getEntity().getItemStack();
-        // TODO Probably won't work
         if (item.getType() == Material.PLAYER_HEAD) {
             SkullMeta meta = (SkullMeta) item.getItemMeta();
-            if (meta.getOwningPlayer() != null && Main.getHeads().contains(meta.getOwningPlayer().getName())) {
+            if (meta.getOwner() != null && Main.getHeads().contains(meta.getOwner())) {
                 event.setCancelled(true);
             }
         }
@@ -274,5 +285,13 @@ class Events implements Listener {
             e.setCancelled(true);
     }
 
-
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    private void disableFireworkDamage(EntityDamageByEntityEvent e)
+    {
+        if (e.getDamager().getType() == EntityType.FIREWORK) {
+            if (e.getDamager().hasMetadata("nodamage")) {
+                e.setCancelled(true);
+            }
+        }
+    }
 }
