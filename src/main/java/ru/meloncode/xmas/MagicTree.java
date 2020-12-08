@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -153,6 +154,7 @@ public class MagicTree {
             FireworkMeta meta = fw.getFireworkMeta();
             meta.addEffect(FireworkEffect.builder().trail(true).withColor(Color.RED).withFade(Color.LIME).withFlicker().with(Type.BURST).build());
             fw.setFireworkMeta(meta);
+            fw.setMetadata("nodamage", new FixedMetadataValue(Main.getInstance(), true));
         }
         build();
         save();
