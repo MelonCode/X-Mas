@@ -1,5 +1,6 @@
 package ru.meloncode.xmas;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -7,6 +8,8 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
+import ru.meloncode.xmas.utils.LocationUtils;
 import ru.meloncode.xmas.utils.TextUtils;
 
 import java.util.ArrayList;
@@ -20,11 +23,13 @@ import static ru.meloncode.xmas.Main.RANDOM;
 class XMas {
 
     private static final ConcurrentHashMap<UUID, MagicTree> trees = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, List<MagicTree>> trees_byChunk = new ConcurrentHashMap<>();
     public static ItemStack XMAS_CRYSTAL;
 
     public static void createMagicTree(Player player, Location loc) {
         MagicTree tree = new MagicTree(player.getUniqueId(), TreeLevel.SAPLING, loc);
         trees.put(tree.getTreeUID(), tree);
+        trees_byChunk.computeIfAbsent(LocationUtils.getChunkKey(tree.getLocation()), aLong -> new ArrayList<>()).add(tree);
         tree.save();
     }
 
@@ -37,10 +42,16 @@ class XMas {
         return trees.values();
     }
 
+    @Nullable
+    public static Collection<MagicTree> getAllTreesInChunk(Chunk chunk) {
+        return trees_byChunk.get(LocationUtils.getChunkKey(chunk));
+    }
+
     public static void removeTree(MagicTree tree) {
         tree.unbuild();
         TreeSerializer.removeTree(tree);
         trees.remove(tree.getTreeUID());
+        trees_byChunk.remove(LocationUtils.getChunkKey(tree.getLocation()));
     }
 
     public static void processPresent(Block block, Player player) {

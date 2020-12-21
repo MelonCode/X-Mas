@@ -26,6 +26,8 @@ class TreeSerializer {
             TreeLevel level;
             int x, y, z;
             Location loc;
+            long presentCounter;
+            int scheduledPresents;
             if (trees.getConfigurationSection("trees") != null && trees.getConfigurationSection("trees").getKeys(false).size() > 0) {
 
                 for (String cKey : trees.getConfigurationSection("trees").getKeys(false)) {
@@ -44,7 +46,10 @@ class TreeSerializer {
                             } else {
                                 requirements = new HashMap<>();
                             }
-                            XMas.addMagicTree(new MagicTree(owner, treeUID, level, loc, requirements));
+                            presentCounter = trees.getLong("trees." + cKey + ".present_counter", 0);
+                            scheduledPresents = trees.getInt("trees." + cKey + ".scheduled_presents", 0);
+
+                            XMas.addMagicTree(new MagicTree(owner, treeUID, level, loc, requirements, presentCounter, scheduledPresents));
                         } catch (Exception e) {
                             plugin.getLogger().severe(String.format("Error while loading tree `%s`", cKey));
                             e.printStackTrace();
@@ -76,6 +81,8 @@ class TreeSerializer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        trees.set("trees." + cKey + ".present_counter", tree.getPresentCounter());
+        trees.set("trees." + cKey + ".scheduled_presents", tree.getScheduledPresents());
     }
 
     public static void removeTree(MagicTree tree) {
