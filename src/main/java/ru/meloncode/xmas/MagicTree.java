@@ -21,11 +21,11 @@ public class MagicTree {
     private final UUID owner;
     private final Location location;
     private final UUID treeuid;
-    private final Set<Block> presents = new HashSet<>();
     TreeLevel level;
     private Map<Material, Integer> levelupRequirements;
     private Set<Block> blocks;
-    private long presentCounter = 0;
+    private long presentCounter;
+    private int scheduledPresents;
 
     public MagicTree(UUID owner, TreeLevel level, Location location) {
         this.treeuid = UUID.randomUUID();
@@ -35,16 +35,22 @@ public class MagicTree {
         this.levelupRequirements = new HashMap<>(level.getLevelupRequirements());
         if (Main.inProgress)
             build();
+        presentCounter = 0;
+        scheduledPresents = 0;
     }
 
-    public MagicTree(UUID owner, UUID uid, TreeLevel level, Location location, Map<Material, Integer> levelupRequirements) {
+    public MagicTree(UUID owner, UUID uid, TreeLevel level, Location location, Map<Material, Integer> levelupRequirements,
+                     long presentCounter, int scheduledPresents) {
         this.owner = owner;
         this.treeuid = uid;
         this.level = level;
         this.location = location;
         this.levelupRequirements = new HashMap<>(levelupRequirements);
+        this.presentCounter = 0;
+        this.presentCounter = presentCounter;
         if (Main.inProgress)
             build();
+        this.scheduledPresents = scheduledPresents;
     }
 
     public static MagicTree getTreeByBlock(Block block) {
@@ -186,29 +192,35 @@ public class MagicTree {
 
     @SuppressWarnings("deprecation")
     public void spawnPresent() {
+        if(!location.getWorld().isChunkLoaded((int)location.getX() / 16, (int)location.getZ() / 16))
+        {
+            if(scheduledPresents + 1 <= 8)
+                scheduledPresents++;
+            return;
+        }
+
         Location presentLoc = location.clone().add(-1 + Main.RANDOM.nextInt(3), 0, -1 + Main.RANDOM.nextInt(3));
 
         Block pBlock = presentLoc.getBlock();
-        if (presents.size() <= 3) {
-            if (!pBlock.getType().isSolid() && pBlock.getType() != Material.SPRUCE_SAPLING) {
-                pBlock.setType(Material.PLAYER_HEAD);
-                BlockState state = pBlock.getState();
-                if (state instanceof Skull) {
-                    Skull skull = (Skull) state;
-                    BlockFace face;
-                    do {
-                        face = BlockFace.values()[Main.RANDOM.nextInt(BlockFace.values().length)];
-                    }
-                    while (face == BlockFace.DOWN || face == BlockFace.UP || face == BlockFace.SELF);
-                    //skull.setRotation(face);
-                    Rotatable skullRotatable = (Rotatable) skull.getBlockData();
-                    skullRotatable.setRotation(face);
-                    //skull.setSkullType(SkullType.PLAYER);
-                    skull.setType(Material.PLAYER_HEAD);
-                    //skull.setOwner();
-                    skull.setOwningPlayer(Bukkit.getOfflinePlayer(Main.getHeads().get(Main.RANDOM.nextInt(Main.getHeads().size()))));
-                    skull.update(true);
+        if (!pBlock.getType().isSolid() && pBlock.getType() != Material.SPRUCE_SAPLING)
+        {
+            pBlock.setType(Material.PLAYER_HEAD);
+            BlockState state = pBlock.getState();
+            if (state instanceof Skull) {
+                Skull skull = (Skull) state;
+                BlockFace face;
+                do {
+                    face = BlockFace.values()[Main.RANDOM.nextInt(BlockFace.values().length)];
                 }
+                while (face == BlockFace.DOWN || face == BlockFace.UP || face == BlockFace.SELF);
+                //skull.setRotation(face);
+                Rotatable skullRotatable = (Rotatable) skull.getBlockData();
+                skullRotatable.setRotation(face);
+                //skull.setSkullType(SkullType.PLAYER);
+                skull.setType(Material.PLAYER_HEAD);
+                //skull.setOwner();
+                skull.setOwningPlayer(Bukkit.getOfflinePlayer(Main.getHeads().get(Main.RANDOM.nextInt(Main.getHeads().size()))));
+                skull.update(true);
             }
         }
     }
@@ -278,5 +290,23 @@ public class MagicTree {
             }
         }
         XMas.removeTree(this);
+    }
+
+    public long getPresentCounter() {
+        return presentCounter;
+    }
+
+    public int getScheduledPresents() {
+        return scheduledPresents;
+    }
+
+    public boolean hasScheduledPresents() {
+        return scheduledPresents > 0;
+    }
+
+    public void spawnScheduledPresents() {
+        for(int i = scheduledPresents; i > 0; i--)
+            spawnPresent();
+        scheduledPresents = 0;
     }
 }

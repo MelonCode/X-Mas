@@ -13,13 +13,16 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.jetbrains.annotations.Nullable;
 import ru.meloncode.xmas.utils.TextUtils;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -291,6 +294,19 @@ class Events implements Listener {
             if (e.getDamager().hasMetadata("nodamage")) {
                 e.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    private void chunkLoad(ChunkLoadEvent e)
+    {
+        Collection<MagicTree> trees = XMas.getAllTreesInChunk(e.getChunk());
+        if(trees == null)
+            return;
+        for(MagicTree tree : trees)
+        {
+            if(tree.hasScheduledPresents())
+                tree.spawnScheduledPresents();
         }
     }
 }
