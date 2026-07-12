@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +52,16 @@ class TreeSerializer {
                     || !invalidRequirements.isEmpty()
                     || !duplicateLocations.isEmpty();
         }
+
+        public int warningCount() {
+            return invalidTreeIds.size()
+                    + invalidOwners.size()
+                    + invalidLevels.size()
+                    + invalidLocations.size()
+                    + missingWorlds.size()
+                    + invalidRequirements.size()
+                    + duplicateLocations.size();
+        }
     }
 
     public record WorldMigrationReport(
@@ -59,6 +70,14 @@ class TreeSerializer {
             int matchedTrees,
             boolean applied,
             File backupFile
+    ) {
+    }
+
+    public record TreeSummary(
+            int storedTreeCount,
+            int loadedTreeCount,
+            Set<UUID> owners,
+            Map<String, Integer> levelCounts
     ) {
     }
 
@@ -85,15 +104,31 @@ class TreeSerializer {
                             z = trees.getInt("trees." + cKey + ".loc.z");
                             loc = new Location(world, x, y, z);
                             Map<Material, Integer> requirements;
-                            if (trees.getConfigurationSection("trees." + cKey + ".levelup") != null) {
-                                requirements = convertRequirementsMap(trees.getConfigurationSection("trees." + cKey + ".levelup").getValues(false));
+                            ConfigurationSection requirementsSection = trees.getConfigurationSection("trees." + cKey + ".levelup");
+                            boolean readyToLevelUp = trees.getBoolean("trees." + cKey + ".ready_to_levelup", false);
+                            boolean backfilledRequirements = false;
+                            if (readyToLevelUp) {
+                                requirements = new HashMap<>();
+                            } else if (requirementsSection != null) {
+                                requirements = convertRequirementsMap(requirementsSection.getValues(false));
+                                if (shouldBackfillLegacyRequirements(level, requirements)) {
+                                    requirements = new HashMap<>(level.getLevelupRequirements());
+                                    backfilledRequirements = true;
+                                }
+                            } else if (level.hasNext()) {
+                                requirements = new HashMap<>(level.getLevelupRequirements());
+                                backfilledRequirements = shouldBackfillLegacyRequirements(level, null);
                             } else {
                                 requirements = new HashMap<>();
                             }
                             presentCounter = trees.getLong("trees." + cKey + ".present_counter", 0);
                             scheduledPresents = trees.getInt("trees." + cKey + ".scheduled_presents", 0);
 
-                            XMas.addMagicTree(new MagicTree(owner, treeUID, level, loc, requirements, presentCounter, scheduledPresents));
+                            MagicTree tree = new MagicTree(owner, treeUID, level, loc, requirements, presentCounter, scheduledPresents);
+                            XMas.addMagicTree(tree);
+                            if (backfilledRequirements) {
+                                tree.save();
+                            }
                         } catch (Exception e) {
                             plugin.getLogger().log(Level.SEVERE, LocaleManager.text("console.trees.load-tree-error", "Error while loading tree {tree}",
                                     "{tree}", cKey), e);
@@ -117,6 +152,10 @@ class TreeSerializer {
         trees.set("trees." + cKey + ".loc.x", tree.getLocation().getX());
         trees.set("trees." + cKey + ".loc.y", tree.getLocation().getY());
         trees.set("trees." + cKey + ".loc.z", tree.getLocation().getZ());
+        trees.set("trees." + cKey + ".levelup", null);
+        boolean readyToLevelUp = tree.getLevel().hasNext()
+                && (tree.getLevelupRequirements() == null || tree.getLevelupRequirements().isEmpty());
+        trees.set("trees." + cKey + ".ready_to_levelup", readyToLevelUp ? true : null);
         if (tree.getLevelupRequirements() != null && tree.getLevelupRequirements().size() > 0)
             trees.createSection("trees." + cKey + ".levelup", tree.getLevelupRequirements());
         trees.set("trees." + cKey + ".present_counter", tree.getPresentCounter());
@@ -199,6 +238,32 @@ class TreeSerializer {
         );
     }
 
+    public static TreeSummary summarizeTreesFile() {
+        FileConfiguration data = ConfigUtils.loadConfig(treesFile);
+        ConfigurationSection treeSection = data.getConfigurationSection("trees");
+        Set<UUID> owners = new LinkedHashSet<>();
+        Map<String, Integer> levelCounts = new LinkedHashMap<>();
+
+        if (treeSection == null) {
+            return new TreeSummary(0, XMas.getAllTrees().size(), owners, levelCounts);
+        }
+
+        for (String treeKey : treeSection.getKeys(false)) {
+            String rawOwner = data.getString("trees." + treeKey + ".owner");
+            if (rawOwner != null) {
+                try {
+                    owners.add(UUID.fromString(rawOwner));
+                } catch (IllegalArgumentException ignored) {
+                    // Validation reports invalid owners; summaries skip malformed UUIDs.
+                }
+            }
+            String level = data.getString("trees." + treeKey + ".level", "unknown");
+            levelCounts.merge(level, 1, Integer::sum);
+        }
+
+        return new TreeSummary(treeSection.getKeys(false).size(), XMas.getAllTrees().size(), owners, levelCounts);
+    }
+
     public static WorldMigrationReport migrateWorldName(String sourceWorld, String targetWorld, boolean apply) throws IOException {
         FileConfiguration data = ConfigUtils.loadConfig(treesFile);
         ConfigurationSection treeSection = data.getConfigurationSection("trees");
@@ -252,6 +317,25 @@ class TreeSerializer {
                 }
             }
         return levelupRequirements;
+    }
+
+    private static boolean shouldBackfillLegacyRequirements(TreeLevel level, Map<Material, Integer> savedRequirements) {
+        if (level == null
+                || !level.hasNext()
+                || !"magic_tree".equalsIgnoreCase(level.getLevelName())
+                || level.getLevelupRequirements() == null
+                || level.getLevelupRequirements().isEmpty()) {
+            return false;
+        }
+        if (savedRequirements == null || savedRequirements.isEmpty()) {
+            return true;
+        }
+        for (Material material : savedRequirements.keySet()) {
+            if (!level.getLevelupRequirements().containsKey(material)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean matchesSavedWorld(World world, String savedWorldName) {

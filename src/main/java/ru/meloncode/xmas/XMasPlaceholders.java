@@ -33,6 +33,15 @@ final class XMasPlaceholders {
             "%onembxmastree_trees.total%",
             "%onembxmastree_trees.owners%",
             "%onembxmastree_player.trees%",
+            "%onembxmastree_player.highest_tree_level%",
+            "%onembxmastree_player.highest_tree_level_name%",
+            "%onembxmastree_player.highest_tree_level_display%",
+            "%onembxmastree_player.gifts_today%",
+            "%onembxmastree_player.gifts_total%",
+            "%onembxmastree_player.streak_current%",
+            "%onembxmastree_player.streak_best%",
+            "%onembxmastree_player.milestones_claimable%",
+            "%onembxmastree_community.gifts_opened%",
             "%onembxmastree_version%"
     );
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH-mm-ss");
@@ -68,6 +77,15 @@ final class XMasPlaceholders {
             case "trees_total" -> Integer.toString(XMas.getAllTrees().size());
             case "trees_owners" -> Integer.toString(countOwners(XMas.getAllTrees()));
             case "player_trees" -> Integer.toString(countPlayerTrees(player));
+            case "player_highest_tree_level" -> Integer.toString(highestPlayerTreeRank(player));
+            case "player_highest_tree_level_name" -> highestPlayerTreeLevelName(player);
+            case "player_highest_tree_level_display" -> displayTreeLevel(highestPlayerTreeLevelName(player));
+            case "player_gifts_today" -> Integer.toString(player != null && plugin.getEventProgress() != null ? plugin.getEventProgress().getGiftClaimsToday(player.getUniqueId()) : 0);
+            case "player_gifts_total" -> Integer.toString(player != null && plugin.getEventProgress() != null ? plugin.getEventProgress().getTotalGiftClaims(player.getUniqueId()) : 0);
+            case "player_streak_current" -> Integer.toString(player != null && plugin.getEventProgress() != null ? plugin.getEventProgress().getCurrentStreak(player.getUniqueId()) : 0);
+            case "player_streak_best" -> Integer.toString(player != null && plugin.getEventProgress() != null ? plugin.getEventProgress().getBestStreak(player.getUniqueId()) : 0);
+            case "player_milestones_claimable" -> Integer.toString(player != null && plugin.getEventProgress() != null ? plugin.getEventProgress().playerStats(player).claimableMilestones() : 0);
+            case "community_gifts_opened" -> Integer.toString(plugin.getEventProgress() != null ? plugin.getEventProgress().getCommunityGiftClaims() : 0);
             case "version" -> plugin.getPluginMeta().getVersion();
             default -> null;
         };
@@ -138,6 +156,69 @@ final class XMasPlaceholders {
         return count;
     }
 
+    private static int highestPlayerTreeRank(OfflinePlayer player) {
+        TreeLevel highestLevel = highestPlayerTreeLevel(player);
+        return highestLevel == null ? 0 : treeLevelRank(highestLevel);
+    }
+
+    private static String highestPlayerTreeLevelName(OfflinePlayer player) {
+        TreeLevel highestLevel = highestPlayerTreeLevel(player);
+        return highestLevel == null
+                ? LocaleManager.text("placeholders.values.none", "none")
+                : highestLevel.getLevelName();
+    }
+
+    private static TreeLevel highestPlayerTreeLevel(OfflinePlayer player) {
+        if (player == null || player.getUniqueId() == null) {
+            return null;
+        }
+        TreeLevel highestLevel = null;
+        int highestRank = 0;
+        for (MagicTree tree : XMas.getAllTrees()) {
+            if (!player.getUniqueId().equals(tree.getOwner())) {
+                continue;
+            }
+            int rank = treeLevelRank(tree.getLevel());
+            if (rank > highestRank) {
+                highestRank = rank;
+                highestLevel = tree.getLevel();
+            }
+        }
+        return highestLevel;
+    }
+
+    private static int treeLevelRank(TreeLevel level) {
+        if (level == null) {
+            return 0;
+        }
+        String levelName = level.getLevelName();
+        if (levelName == null) {
+            return 0;
+        }
+        return switch (levelName.toLowerCase(Locale.ENGLISH)) {
+            case "sapling" -> 1;
+            case "small_tree" -> 2;
+            case "tree" -> 3;
+            case "magic_tree" -> 4;
+            case "super_tree" -> 5;
+            default -> 0;
+        };
+    }
+
+    private static String displayTreeLevel(String levelName) {
+        if (levelName == null || levelName.isBlank() || levelName.equalsIgnoreCase(LocaleManager.text("placeholders.values.none", "none"))) {
+            return LocaleManager.text("placeholders.values.none", "none");
+        }
+        return switch (levelName.toLowerCase(Locale.ENGLISH)) {
+            case "sapling" -> LocaleManager.text("placeholders.values.tree-level.sapling", "Sapling");
+            case "small_tree" -> LocaleManager.text("placeholders.values.tree-level.small-tree", "Small Tree");
+            case "tree" -> LocaleManager.text("placeholders.values.tree-level.tree", "Tree");
+            case "magic_tree" -> LocaleManager.text("placeholders.values.tree-level.magic-tree", "Magic Tree");
+            case "super_tree" -> LocaleManager.text("placeholders.values.tree-level.super-tree", "Super Tree");
+            default -> levelName;
+        };
+    }
+
     public static Map<String, String> descriptions() {
         Map<String, String> descriptions = new LinkedHashMap<>();
         descriptions.put("%onembxmastree_event.active%", LocaleManager.text("placeholders.descriptions.event-active", "whether the event is currently active"));
@@ -156,6 +237,15 @@ final class XMasPlaceholders {
         descriptions.put("%onembxmastree_trees.total%", LocaleManager.text("placeholders.descriptions.trees-total", "total loaded tree count"));
         descriptions.put("%onembxmastree_trees.owners%", LocaleManager.text("placeholders.descriptions.trees-owners", "number of unique tree owners"));
         descriptions.put("%onembxmastree_player.trees%", LocaleManager.text("placeholders.descriptions.player-trees", "loaded trees owned by the placeholder player"));
+        descriptions.put("%onembxmastree_player.highest_tree_level%", LocaleManager.text("placeholders.descriptions.player-highest-tree-level", "highest loaded tree level owned by the placeholder player, as 0-5"));
+        descriptions.put("%onembxmastree_player.highest_tree_level_name%", LocaleManager.text("placeholders.descriptions.player-highest-tree-level-name", "highest loaded tree level owned by the placeholder player, as a config key"));
+        descriptions.put("%onembxmastree_player.highest_tree_level_display%", LocaleManager.text("placeholders.descriptions.player-highest-tree-level-display", "highest loaded tree level owned by the placeholder player, as display text"));
+        descriptions.put("%onembxmastree_player.gifts_today%", LocaleManager.text("placeholders.descriptions.player-gifts-today", "present gifts opened by the placeholder player today"));
+        descriptions.put("%onembxmastree_player.gifts_total%", LocaleManager.text("placeholders.descriptions.player-gifts-total", "present gifts opened by the placeholder player during the event"));
+        descriptions.put("%onembxmastree_player.streak_current%", LocaleManager.text("placeholders.descriptions.player-streak-current", "current daily present-opening streak for the placeholder player"));
+        descriptions.put("%onembxmastree_player.streak_best%", LocaleManager.text("placeholders.descriptions.player-streak-best", "best daily present-opening streak for the placeholder player"));
+        descriptions.put("%onembxmastree_player.milestones_claimable%", LocaleManager.text("placeholders.descriptions.player-milestones-claimable", "claimable personal milestone count for the placeholder player"));
+        descriptions.put("%onembxmastree_community.gifts_opened%", LocaleManager.text("placeholders.descriptions.community-gifts-opened", "community-wide present gifts opened"));
         descriptions.put("%onembxmastree_version%", LocaleManager.text("placeholders.descriptions.version", "loaded plugin version"));
         return descriptions;
     }

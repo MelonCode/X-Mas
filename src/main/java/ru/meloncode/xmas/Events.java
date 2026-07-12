@@ -12,6 +12,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.StructureGrowEvent;
@@ -31,6 +33,20 @@ class Events implements Listener {
 
     public void registerListener() {
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onJournalInventoryClick(InventoryClickEvent event) {
+        if (event.getInventory().getHolder() instanceof JournalInventoryHolder) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onJournalInventoryDrag(InventoryDragEvent event) {
+        if (event.getInventory().getHolder() instanceof JournalInventoryHolder) {
+            event.setCancelled(true);
+        }
     }
 
 
@@ -214,14 +230,14 @@ class Events implements Listener {
                                     XMas.removeTree(tree);
                                 }
                                 if (Main.inProgress)
-                                    TextUtils.sendMessage(player, TextUtils.success(LocaleManager.DESTROY_COMPLETE));
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_COMPLETE);
                             } else {
                                 destroyers.put(player.getUniqueId(), System.currentTimeMillis());
                                 if (Main.inProgress)
-                                    TextUtils.sendMessage(player, TextUtils.warning(LocaleManager.DESTROY_WARNING));
-                                TextUtils.sendMessage(player, TextUtils.muted(LocaleManager.DESTROY_TUT));
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_WARNING);
+                                TextUtils.sendMessage(player, LocaleManager.DESTROY_TUT);
                                 if (Main.resourceBack) {
-                                    TextUtils.sendMessage(player, TextUtils.info(LocaleManager.DESTROY_RESOURCE_BACK));
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_RESOURCE_BACK);
                                 }
                             }
                         else {
@@ -234,9 +250,9 @@ class Events implements Listener {
                 case SPRUCE_LEAVES:
                 case GLOWSTONE:
                     if (Main.inProgress)
-                        TextUtils.sendMessage(player, TextUtils.accent(LocaleManager.DESTROY_LEAVES_SANTA));
+                        TextUtils.sendMessage(player, LocaleManager.DESTROY_LEAVES_SANTA);
                     if (player.getUniqueId().equals(tree.getOwner()) || XMasCommand.canOverrideTree(player)) {
-                        TextUtils.sendMessage(player, TextUtils.warning(LocaleManager.DESTROY_LEAVES_TUT));
+                        TextUtils.sendMessage(player, LocaleManager.DESTROY_LEAVES_TUT);
                     } else {
                         TextUtils.sendMessage(player, LocaleManager.DESTROY_FAIL_OWNER);
                     }
@@ -250,14 +266,14 @@ class Events implements Listener {
                                 } else {
                                     XMas.removeTree(tree);
                                 }
-                                TextUtils.sendMessage(player, TextUtils.success(LocaleManager.DESTROY_COMPLETE));
+                                TextUtils.sendMessage(player, LocaleManager.DESTROY_COMPLETE);
                             } else {
                                 destroyers.put(player.getUniqueId(), System.currentTimeMillis());
                                 if (Main.inProgress)
-                                    TextUtils.sendMessage(player, TextUtils.warning(LocaleManager.DESTROY_SAPLING));
-                                TextUtils.sendMessage(player, TextUtils.muted(LocaleManager.DESTROY_TUT));
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_SAPLING);
+                                TextUtils.sendMessage(player, LocaleManager.DESTROY_TUT);
                                 if (Main.resourceBack) {
-                                    TextUtils.sendMessage(player, TextUtils.info(LocaleManager.DESTROY_RESOURCE_BACK));
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_RESOURCE_BACK);
                                 }
                             }
                         } else {

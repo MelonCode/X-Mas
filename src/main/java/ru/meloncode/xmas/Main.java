@@ -17,6 +17,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import ru.meloncode.xmas.utils.ConfigUtils;
+import ru.meloncode.xmas.utils.HeadProfileUtils;
 import ru.meloncode.xmas.utils.TextUtils;
 
 import java.io.File;
@@ -31,7 +32,7 @@ public class Main extends JavaPlugin implements Listener {
 
     // Yeah. That's as it should be.
     static final Random RANDOM = new Random(Calendar.getInstance().get(Calendar.YEAR));
-    static List<ItemStack> gifts;
+    static List<GiftEntry> gifts;
     static float LUCK_CHANCE;
     static boolean LUCK_CHANCE_ENABLED;
     static boolean resourceBack;
@@ -54,19 +55,60 @@ public class Main extends JavaPlugin implements Listener {
     private FileConfiguration config;
     private String locale;
     private XMasPlaceholderExpansion placeholderExpansion;
+    private ConfigDiagnostics configDiagnostics = ConfigDiagnostics.empty();
+    private EventProgress eventProgress;
 
     public record ReloadSummary(
             String locale,
             int giftCount,
             int presentHeadCount,
+            int configuredPresentHeadCount,
+            int texturePresentHeadCount,
+            int legacyPlayerHeadCount,
+            int invalidPresentHeadCount,
+            int invalidGiftCount,
+            int configWarningCount,
+            int treeDataWarningCount,
             int treeCount,
             int treeOwnerCount,
             boolean particlesEnabled,
             boolean resourceBack,
-            boolean legacyAliasEnabled,
             float growFirstSoundVolume,
-            float growRepeatSoundVolume
+            float growRepeatSoundVolume,
+            List<String> warnings
     ) {
+    }
+
+    public record ConfigDiagnostics(
+            int configuredPresentHeadCount,
+            int validPresentHeadCount,
+            int texturePresentHeadCount,
+            int legacyPlayerHeadCount,
+            int invalidPresentHeadCount,
+            int configuredGiftCount,
+            int validGiftCount,
+            int invalidGiftCount,
+            int treeDataWarningCount,
+            List<String> warnings
+    ) {
+        public static ConfigDiagnostics empty() {
+            return new ConfigDiagnostics(0, 0, 0, 0, 0, 0, 0, 0, 0, Collections.emptyList());
+        }
+
+        public int configWarningCount() {
+            return warnings.size();
+        }
+    }
+
+    public record GiftEntry(ItemStack item, int weight) {
+        public GiftEntry {
+            item = item.clone();
+            weight = Math.max(1, weight);
+        }
+
+        public ItemStack itemClone() {
+            return item.clone();
+        }
     }
 
     public static Plugin getInstance() {
@@ -87,6 +129,14 @@ public class Main extends JavaPlugin implements Listener {
 
     public static NamespacedKey getPresentHeadKey() {
         return presentHeadKey;
+    }
+
+    public static int getUpdateSpeed() {
+        return UPDATE_SPEED;
+    }
+
+    public EventProgress getEventProgress() {
+        return eventProgress;
     }
 
     private File getPluginConfigFile() {
@@ -159,24 +209,15 @@ public class Main extends JavaPlugin implements Listener {
             TextUtils.sendConsoleMessage(TextUtils.error(LocaleManager.text("console.config.unable-load-holiday-end-date", "Unable to load holiday end date")));
         }
         defineTreeLevels();
+        eventProgress = new EventProgress(this);
         for (World world : getServer().getWorlds()) {
             TreeSerializer.loadTrees(this, world);
         }
 
-        heads = config.getStringList("xmas.presents");
+        loadDiagnosticsAndConfiguredItems(true);
         if (heads.size() == 0) {
             getLogger().warning(LocaleManager.text("console.gifts.no-heads", "Warning! No heads loaded. Presents cannot spawn without a box head."));
             return;
-        }
-        gifts = new ArrayList<>();
-        for (String serializedItem : config.getStringList("xmas.gifts")) {
-            ItemStack item = deserializeItem(serializedItem);
-            if (item != null) {
-                gifts.add(item);
-            } else {
-                getLogger().warning(LocaleManager.text("console.gifts.load-item-failed", "Failed to load gift item: {item}",
-                        "{item}", serializedItem));
-            }
         }
         if (gifts.size() == 0) {
             getLogger().warning(LocaleManager.text("console.gifts.no-gifts", "Warning! No gifts loaded. No X-Mas without gifts."));
@@ -203,7 +244,7 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void onWorldUnload(WorldUnloadEvent event) {
         for (MagicTree magicTree : XMas.getAllTrees()) {
-            if (magicTree.getLocation().getWorld() == event.getWorld()) magicTree.unbuild();
+            if (magicTree.getLocation().getWorld() == event.getWorld()) magicTree.unbuild(false);
         }
     }
 
@@ -236,18 +277,13 @@ public class Main extends JavaPlugin implements Listener {
         }
 
         defineTreeLevels();
-        heads = config.getStringList("xmas.presents");
-
-        gifts = new ArrayList<>();
-        for (String serializedItem : config.getStringList("xmas.gifts")) {
-            ItemStack item = deserializeItem(serializedItem);
-            if (item != null) {
-                gifts.add(item);
-            } else {
-                getLogger().warning(LocaleManager.text("console.gifts.deserialize-item-failed", "Failed to deserialize gift item: {item}",
-                        "{item}", serializedItem));
-            }
+        refreshLoadedTreeDefinitions();
+        if (eventProgress == null) {
+            eventProgress = new EventProgress(this);
+        } else {
+            eventProgress.reload();
         }
+        loadDiagnosticsAndConfiguredItems(true);
 
         LUCK_CHANCE_ENABLED = config.getBoolean("xmas.luck.enabled");
         LUCK_CHANCE = (float) config.getInt("xmas.luck.chance") / 100;
@@ -266,19 +302,36 @@ public class Main extends JavaPlugin implements Listener {
                 LocaleManager.getActiveLocaleCode(),
                 gifts != null ? gifts.size() : 0,
                 heads != null ? heads.size() : 0,
+                configDiagnostics.configuredPresentHeadCount(),
+                configDiagnostics.texturePresentHeadCount(),
+                configDiagnostics.legacyPlayerHeadCount(),
+                configDiagnostics.invalidPresentHeadCount(),
+                configDiagnostics.invalidGiftCount(),
+                configDiagnostics.configWarningCount(),
+                configDiagnostics.treeDataWarningCount(),
                 XMas.getAllTrees().size(),
                 owners.size(),
                 particlesEnabled,
                 resourceBack,
-                getConfig().getBoolean("core.commands.legacy-command-enabled", true),
                 growFirstSoundVolume,
-                growRepeatSoundVolume
+                growRepeatSoundVolume,
+                configDiagnostics.warnings()
         );
+    }
+
+    public ConfigDiagnostics getConfigDiagnostics() {
+        return configDiagnostics;
     }
 
     private void loadSoundConfig() {
         growFirstSoundVolume = clampVolume(config.getDouble("core.sounds.grow.first-volume", 0.5));
         growRepeatSoundVolume = clampVolume(config.getDouble("core.sounds.grow.repeat-volume", 0.2));
+    }
+
+    private void refreshLoadedTreeDefinitions() {
+        for (MagicTree tree : XMas.getAllTrees()) {
+            tree.refreshLevelDefinition();
+        }
     }
 
     private float clampVolume(double volume) {
@@ -297,11 +350,11 @@ public class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        List<String> giftList = config.getStringList("xmas.gifts");
+        List<Object> giftList = getRawGiftList();
         giftList.add(serializedItem);
         config.set("xmas.gifts", giftList);
         saveConfig();
-        gifts.add(gift);
+        reloadGiftItemsFromConfig();
     }
 
     public List<ItemStack> getGiftItems() {
@@ -309,19 +362,61 @@ public class Main extends JavaPlugin implements Listener {
         if (gifts == null) {
             return snapshot;
         }
-        for (ItemStack gift : gifts) {
-            if (gift != null) {
-                snapshot.add(gift.clone());
+        for (GiftEntry gift : gifts) {
+            if (gift != null && gift.item() != null) {
+                snapshot.add(gift.itemClone());
+            }
+        }
+        return snapshot;
+    }
+
+    public List<GiftEntry> getGiftEntries() {
+        List<GiftEntry> snapshot = new ArrayList<>();
+        if (gifts == null) {
+            return snapshot;
+        }
+        for (GiftEntry gift : gifts) {
+            if (gift != null && gift.item() != null) {
+                snapshot.add(new GiftEntry(gift.item(), gift.weight()));
             }
         }
         return snapshot;
     }
 
     public ItemStack rollGiftItem() {
+        return rollConfiguredGift();
+    }
+
+    public static ItemStack rollConfiguredGift() {
         if (gifts == null || gifts.isEmpty()) {
             return null;
         }
-        return gifts.get(RANDOM.nextInt(gifts.size())).clone();
+        int totalWeight = getGiftTotalWeight();
+        if (totalWeight <= 0) {
+            return null;
+        }
+        int roll = RANDOM.nextInt(totalWeight) + 1;
+        int runningWeight = 0;
+        for (GiftEntry gift : gifts) {
+            runningWeight += gift.weight();
+            if (roll <= runningWeight) {
+                return gift.itemClone();
+            }
+        }
+        return gifts.get(gifts.size() - 1).itemClone();
+    }
+
+    public static int getGiftTotalWeight() {
+        if (gifts == null || gifts.isEmpty()) {
+            return 0;
+        }
+        int totalWeight = 0;
+        for (GiftEntry gift : gifts) {
+            if (gift != null) {
+                totalWeight += Math.max(1, gift.weight());
+            }
+        }
+        return totalWeight;
     }
 
     public ItemStack removeGiftItem(int displayIndex) {
@@ -329,11 +424,11 @@ public class Main extends JavaPlugin implements Listener {
             return null;
         }
 
-        List<String> giftList = config.getStringList("xmas.gifts");
+        List<Object> giftList = getRawGiftList();
         int validIndex = 0;
         for (int rawIndex = 0; rawIndex < giftList.size(); rawIndex++) {
-            ItemStack item = deserializeItem(giftList.get(rawIndex));
-            if (item == null) {
+            GiftEntry gift = deserializeGiftEntry(giftList.get(rawIndex), true);
+            if (gift == null) {
                 continue;
             }
             validIndex++;
@@ -342,7 +437,35 @@ public class Main extends JavaPlugin implements Listener {
                 config.set("xmas.gifts", giftList);
                 saveConfig();
                 reloadGiftItemsFromConfig();
-                return item;
+                return gift.itemClone();
+            }
+        }
+        return null;
+    }
+
+    public GiftEntry updateGiftWeight(int displayIndex, int weight) {
+        if (displayIndex < 1 || weight < 1) {
+            return null;
+        }
+
+        List<Object> giftList = getRawGiftList();
+        int validIndex = 0;
+        for (int rawIndex = 0; rawIndex < giftList.size(); rawIndex++) {
+            Object rawGift = giftList.get(rawIndex);
+            GiftEntry gift = deserializeGiftEntry(rawGift, true);
+            if (gift == null) {
+                continue;
+            }
+            validIndex++;
+            if (validIndex == displayIndex) {
+                Map<String, Object> updatedGift = new LinkedHashMap<>();
+                updatedGift.put("item", extractGiftItemValue(rawGift));
+                updatedGift.put("weight", weight);
+                giftList.set(rawIndex, updatedGift);
+                config.set("xmas.gifts", giftList);
+                saveConfig();
+                reloadGiftItemsFromConfig();
+                return new GiftEntry(gift.item(), weight);
             }
         }
         return null;
@@ -350,12 +473,148 @@ public class Main extends JavaPlugin implements Listener {
 
     private void reloadGiftItemsFromConfig() {
         gifts = new ArrayList<>();
-        for (String serializedItem : config.getStringList("xmas.gifts")) {
-            ItemStack item = deserializeItem(serializedItem);
-            if (item != null) {
-                gifts.add(item);
+        for (Object configuredGift : getRawGiftList()) {
+            GiftEntry gift = deserializeGiftEntry(configuredGift, false);
+            if (gift != null) {
+                gifts.add(gift);
             }
         }
+    }
+
+    private void loadDiagnosticsAndConfiguredItems(boolean logWarnings) {
+        List<String> warnings = new ArrayList<>();
+        List<String> configuredHeads = config.getStringList("xmas.presents");
+        List<String> validHeads = new ArrayList<>();
+        int textureHeads = 0;
+        int legacyPlayerHeads = 0;
+        int invalidHeads = 0;
+
+        for (String configuredHead : configuredHeads) {
+            HeadProfileUtils.HeadConfigValidation validation = HeadProfileUtils.validateConfiguredHead(configuredHead);
+            if (validation.valid()) {
+                validHeads.add(configuredHead.trim());
+                if (validation.type() == HeadProfileUtils.HeadConfigType.TEXTURE_URL) {
+                    textureHeads++;
+                } else if (validation.type() == HeadProfileUtils.HeadConfigType.PLAYER_NAME) {
+                    legacyPlayerHeads++;
+                }
+            } else {
+                invalidHeads++;
+                if (validation.warning() != null) {
+                    warnings.add(validation.warning());
+                }
+            }
+        }
+        if (legacyPlayerHeads > 0) {
+            warnings.add(LocaleManager.text("console.heads.legacy-player-names", "Present heads include {count} legacy player-name entr{plural}. Texture URLs are preferred for predictable Paper 26.x behavior.",
+                    "{count}", Integer.toString(legacyPlayerHeads),
+                    "{plural}", legacyPlayerHeads == 1 ? "y" : "ies"));
+        }
+
+        List<Object> configuredGifts = getRawGiftList();
+        List<GiftEntry> validGifts = new ArrayList<>();
+        int invalidGifts = 0;
+        for (Object configuredGift : configuredGifts) {
+            GiftEntry gift = deserializeGiftEntry(configuredGift, false);
+            if (gift != null) {
+                validGifts.add(gift);
+            } else {
+                invalidGifts++;
+                warnings.add(LocaleManager.text("console.gifts.invalid-entry", "Invalid gift entry skipped: {item}",
+                        "{item}", abbreviate(String.valueOf(configuredGift), 80)));
+            }
+        }
+
+        TreeSerializer.TreeDataValidationReport treeDataReport = TreeSerializer.validateTreesFile();
+        int treeDataWarningCount = treeDataReport.warningCount();
+        if (treeDataWarningCount > 0) {
+            warnings.add(LocaleManager.text("console.trees.validation-warnings", "trees.yml has {count} validation warning(s). Run /xmastree data validate for details.",
+                    "{count}", Integer.toString(treeDataWarningCount)));
+        }
+
+        if (validHeads.isEmpty()) {
+            warnings.add(LocaleManager.text("console.gifts.no-valid-heads", "No valid present head entries are configured."));
+        }
+        if (validGifts.isEmpty()) {
+            warnings.add(LocaleManager.text("console.gifts.no-valid-gifts", "No valid gift entries are configured."));
+        }
+
+        heads = validHeads;
+        gifts = validGifts;
+        configDiagnostics = new ConfigDiagnostics(
+                configuredHeads.size(),
+                validHeads.size(),
+                textureHeads,
+                legacyPlayerHeads,
+                invalidHeads,
+                configuredGifts.size(),
+                validGifts.size(),
+                invalidGifts,
+                treeDataWarningCount,
+                Collections.unmodifiableList(new ArrayList<>(warnings))
+        );
+
+        if (logWarnings) {
+            for (String warning : warnings) {
+                getLogger().warning(warning);
+            }
+        }
+    }
+
+    private List<Object> getRawGiftList() {
+        List<?> rawList = config.getList("xmas.gifts", Collections.emptyList());
+        return new ArrayList<>(rawList);
+    }
+
+    private static GiftEntry deserializeGiftEntry(Object configuredGift, boolean logWarnings) {
+        if (configuredGift instanceof Map<?, ?> map) {
+            Object itemValue = firstPresentValue(map, "item", "reward", "material", "value");
+            if (itemValue == null) {
+                return null;
+            }
+            int weight = parseGiftWeight(map.get("weight"));
+            if (weight < 1) {
+                return null;
+            }
+            ItemStack item = deserializeItem(String.valueOf(itemValue), logWarnings);
+            return item != null ? new GiftEntry(item, weight) : null;
+        }
+
+        ItemStack item = deserializeItem(String.valueOf(configuredGift), logWarnings);
+        return item != null ? new GiftEntry(item, 1) : null;
+    }
+
+    private static Object firstPresentValue(Map<?, ?> map, String... keys) {
+        for (String key : keys) {
+            if (map.containsKey(key) && map.get(key) != null) {
+                return map.get(key);
+            }
+        }
+        return null;
+    }
+
+    private static int parseGiftWeight(Object rawWeight) {
+        if (rawWeight == null) {
+            return 1;
+        }
+        if (rawWeight instanceof Number number) {
+            return number.intValue();
+        }
+        try {
+            return Integer.parseInt(String.valueOf(rawWeight).trim());
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
+    }
+
+    private String extractGiftItemValue(Object rawGift) {
+        if (rawGift instanceof Map<?, ?> map) {
+            Object itemValue = firstPresentValue(map, "item", "reward", "material", "value");
+            if (itemValue != null) {
+                return String.valueOf(itemValue);
+            }
+        }
+        return String.valueOf(rawGift);
     }
 
     private String serializeItem(ItemStack item) {
@@ -370,6 +629,10 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     public static ItemStack deserializeItem(String serializedItem) {
+        return deserializeItem(serializedItem, true);
+    }
+
+    private static ItemStack deserializeItem(String serializedItem, boolean logWarnings) {
         if (serializedItem == null) {
             return null;
         }
@@ -384,8 +647,10 @@ public class Main extends JavaPlugin implements Listener {
         }
 
         if (trimmed.length() > MAX_SERIALIZED_GIFT_LENGTH) {
-            Bukkit.getLogger().severe(LocaleManager.text("console.gifts.too-large", "Gift item is too large to deserialize safely: {length} characters",
-                    "{length}", Integer.toString(trimmed.length())));
+            if (logWarnings) {
+                Bukkit.getLogger().severe(LocaleManager.text("console.gifts.too-large", "Gift item is too large to deserialize safely: {length} characters",
+                        "{length}", Integer.toString(trimmed.length())));
+            }
             return null;
         }
 
@@ -393,14 +658,28 @@ public class Main extends JavaPlugin implements Listener {
             byte[] serializedBytes = Base64.getDecoder().decode(trimmed);
             return ItemStack.deserializeBytes(serializedBytes);
         } catch (IllegalArgumentException e) {
-            Bukkit.getLogger().severe(LocaleManager.text("console.gifts.invalid-material-or-base64", "Invalid material name or Base64 gift item: {item}",
-                    "{item}", trimmed));
+            if (logWarnings) {
+                Bukkit.getLogger().severe(LocaleManager.text("console.gifts.invalid-material-or-base64", "Invalid material name or Base64 gift item: {item}",
+                        "{item}", trimmed));
+            }
             return null;
         } catch (Exception e) {
-            Bukkit.getLogger().severe(LocaleManager.text("console.gifts.deserialize-error", "Failed to deserialize gift item: {error}",
-                    "{error}", e.getMessage()));
+            if (logWarnings) {
+                Bukkit.getLogger().severe(LocaleManager.text("console.gifts.deserialize-error", "Failed to deserialize gift item: {error}",
+                        "{error}", e.getMessage()));
+            }
             return null;
         }
+    }
+
+    private static String abbreviate(String value, int maxLength) {
+        if (value == null) {
+            return "null";
+        }
+        if (value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, Math.max(0, maxLength - 3)) + "...";
     }
 
     private static ItemStack deserializeMaterialItem(String serializedItem) {
@@ -431,9 +710,12 @@ public class Main extends JavaPlugin implements Listener {
         if (placeholderExpansion != null && placeholderExpansion.isRegistered()) {
             placeholderExpansion.unregister();
         }
+        if (eventProgress != null) {
+            eventProgress.save();
+        }
         if (XMas.getAllTrees().size() > 0)
             for (MagicTree tree : XMas.getAllTrees()) {
-                tree.unbuild();
+                tree.unbuild(false);
             }
     }
 
@@ -492,17 +774,69 @@ public class Main extends JavaPlugin implements Listener {
         long small_delay = config.getInt("xmas.tree-lvl.small_tree.gift-cooldown") * 20 / UPDATE_SPEED;
         long tree_delay = config.getInt("xmas.tree-lvl.tree.gift-cooldown") * 20 / UPDATE_SPEED;
         long magic_delay = config.getInt("xmas.tree-lvl.magic_tree.gift-cooldown") * 20 / UPDATE_SPEED;
+        long super_delay = config.getInt("xmas.tree-lvl.super_tree.gift-cooldown") * 20 / UPDATE_SPEED;
 
         ConfigurationSection lvlups = config.getConfigurationSection("xmas.tree-lvl");
         Map<Material, Integer> saplingLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("sapling.lvlup").getValues(false));
         Map<Material, Integer> smallLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("small_tree.lvlup").getValues(false));
         Map<Material, Integer> treeLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("tree.lvlup").getValues(false));
+        Map<Material, Integer> magicLevelUp = TreeSerializer.convertRequirementsMap(lvlups.getConfigurationSection("magic_tree.lvlup").getValues(false));
+
+        TreeLevel.SUPER_TREE = new TreeLevel("super_tree",
+                getParticleEffect("super_tree", "ambient", Effects.TREE_WHITE_AMBIENT),
+                getParticleEffect("super_tree", "swag", Effects.TREE_GOLD_SWAG),
+                getParticleEffect("super_tree", "body", null),
+                null, super_delay, Collections.emptyMap(), new StructureTemplate(new HashMap<Vector, Material>() {
+            private static final long serialVersionUID = 1L;
+
+            {
+                put(new Vector(0, -1, 0), Material.GRASS_BLOCK);
+                for (int i = 0; i <= 7; i++) {
+                    put(new Vector(0, i, 0), Material.SPRUCE_LOG);
+                    if (i >= 2) {
+                        put(new Vector(1, i, 0), Material.SPRUCE_LEAVES);
+                        put(new Vector(-1, i, 0), Material.SPRUCE_LEAVES);
+                        put(new Vector(0, i, 1), Material.SPRUCE_LEAVES);
+                        put(new Vector(0, i, -1), Material.SPRUCE_LEAVES);
+                    }
+                }
+                put(new Vector(0, 8, 0), Material.SPRUCE_LEAVES);
+                put(new Vector(0, 9, 0), Material.GLOWSTONE);
+
+                for (int x = -2; x <= 2; x++) {
+                    for (int z = -2; z <= 2; z++) {
+                        if (Math.abs(x) + Math.abs(z) <= 3 && !(x == 0 && z == 0)) {
+                            put(new Vector(x, 2, z), Material.SPRUCE_LEAVES);
+                        }
+                    }
+                }
+                for (int x = -2; x <= 2; x++) {
+                    for (int z = -2; z <= 2; z++) {
+                        if (Math.abs(x) + Math.abs(z) <= 2 && !(x == 0 && z == 0)) {
+                            put(new Vector(x, 4, z), Material.SPRUCE_LEAVES);
+                        }
+                    }
+                }
+                for (int x = -1; x <= 1; x++) {
+                    for (int z = -1; z <= 1; z++) {
+                        if (!(x == 0 && z == 0)) {
+                            put(new Vector(x, 6, z), Material.SPRUCE_LEAVES);
+                        }
+                    }
+                }
+
+                put(new Vector(2, 3, 0), Material.REDSTONE_BLOCK);
+                put(new Vector(-2, 3, 0), Material.GOLD_BLOCK);
+                put(new Vector(0, 5, 2), Material.EMERALD_BLOCK);
+                put(new Vector(0, 5, -2), Material.DIAMOND_BLOCK);
+            }
+        }));
 
         TreeLevel.MAGIC_TREE = new TreeLevel("magic_tree",
                 getParticleEffect("magic_tree", "ambient", Effects.TREE_WHITE_AMBIENT),
                 getParticleEffect("magic_tree", "swag", Effects.TREE_SWAG),
                 getParticleEffect("magic_tree", "body", null),
-                null, magic_delay, Collections.emptyMap(), new StructureTemplate(new HashMap<Vector, Material>() {
+                TreeLevel.SUPER_TREE, magic_delay, magicLevelUp, new StructureTemplate(new HashMap<Vector, Material>() {
             private static final long serialVersionUID = 1L;
 
             {

@@ -13,8 +13,51 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 public final class HeadProfileUtils {
+    public enum HeadConfigType {
+        TEXTURE_URL,
+        PLAYER_NAME,
+        INVALID
+    }
+
+    public record HeadConfigValidation(HeadConfigType type, String warning) {
+        public boolean valid() {
+            return type != HeadConfigType.INVALID;
+        }
+    }
 
     private HeadProfileUtils() {
+    }
+
+    public static HeadConfigValidation validateConfiguredHead(String configuredHead) {
+        if (configuredHead == null || configuredHead.trim().isEmpty()) {
+            return new HeadConfigValidation(
+                    HeadConfigType.INVALID,
+                    LocaleManager.text("console.heads.blank", "Blank present head entry.")
+            );
+        }
+
+        String trimmedHead = configuredHead.trim();
+        if (!trimmedHead.contains("://")) {
+            return new HeadConfigValidation(HeadConfigType.PLAYER_NAME, null);
+        }
+
+        try {
+            URL skinUrl = URI.create(trimmedHead).toURL();
+            if (!"textures.minecraft.net".equalsIgnoreCase(skinUrl.getHost())) {
+                return new HeadConfigValidation(
+                        HeadConfigType.INVALID,
+                        LocaleManager.text("console.heads.non-mojang-url", "Ignoring non-Mojang present skin URL: {url}",
+                                "{url}", trimmedHead)
+                );
+            }
+            return new HeadConfigValidation(HeadConfigType.TEXTURE_URL, null);
+        } catch (IllegalArgumentException | MalformedURLException exception) {
+            return new HeadConfigValidation(
+                    HeadConfigType.INVALID,
+                    LocaleManager.text("console.heads.invalid-url", "Invalid present skin URL: {url}",
+                            "{url}", trimmedHead)
+            );
+        }
     }
 
     public static void applyConfiguredHead(Skull skull, String configuredHead, Logger logger) {
@@ -34,7 +77,11 @@ public final class HeadProfileUtils {
     }
 
     private static Object createLegacyProfile(String configuredHead, Logger logger) {
-        if (configuredHead == null || configuredHead.trim().isEmpty()) {
+        HeadConfigValidation validation = validateConfiguredHead(configuredHead);
+        if (!validation.valid()) {
+            if (validation.warning() != null) {
+                logger.warning(validation.warning());
+            }
             return null;
         }
 
@@ -46,12 +93,6 @@ public final class HeadProfileUtils {
             }
 
             URL skinUrl = URI.create(trimmedHead).toURL();
-            if (!"textures.minecraft.net".equalsIgnoreCase(skinUrl.getHost())) {
-                logger.warning(LocaleManager.text("console.heads.non-mojang-url", "Ignoring non-Mojang present skin URL: {url}",
-                        "{url}", trimmedHead));
-                return null;
-            }
-
             Method createProfile = Bukkit.class.getMethod("createProfile", UUID.class);
             Object legacyProfile = createProfile.invoke(null, UUID.randomUUID());
             Method getTextures = legacyProfile.getClass().getMethod("getTextures");

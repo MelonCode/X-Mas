@@ -59,7 +59,8 @@ public class MagicTree {
         if (block == null) {
             return null;
         }
-        return XMas.getTree(blockAssociation.get(block));
+        UUID treeId = blockAssociation.get(block);
+        return treeId != null ? XMas.getTree(treeId) : null;
     }
 
     public static boolean isBlockBelongs(Block block) {
@@ -84,6 +85,18 @@ public class MagicTree {
         return level;
     }
 
+    public void refreshLevelDefinition() {
+        if (level == null || level.getLevelName() == null) {
+            return;
+        }
+        String levelName = level.getLevelName();
+        this.level = TreeLevel.fromString(levelName);
+        if (shouldBackfillLegacyRequirements()) {
+            this.levelupRequirements = new HashMap<>(level.getLevelupRequirements());
+            save();
+        }
+    }
+
     public Location getLocation() {
         return location;
     }
@@ -92,7 +105,29 @@ public class MagicTree {
         return levelupRequirements;
     }
 
+    private boolean shouldBackfillLegacyRequirements() {
+        if (level == null
+                || !level.hasNext()
+                || !"magic_tree".equalsIgnoreCase(level.getLevelName())
+                || level.getLevelupRequirements() == null
+                || level.getLevelupRequirements().isEmpty()) {
+            return false;
+        }
+        if (levelupRequirements == null || levelupRequirements.isEmpty()) {
+            return true;
+        }
+        for (Material material : levelupRequirements.keySet()) {
+            if (!level.getLevelupRequirements().containsKey(material)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean grow(Material material) {
+        if (levelupRequirements == null) {
+            levelupRequirements = new HashMap<>();
+        }
         if (levelupRequirements.containsKey(material)) {
             int levelRequirement = level.getLevelupRequirements().getOrDefault(material, levelupRequirements.get(material));
             int remainingBefore = levelupRequirements.get(material);
@@ -131,6 +166,9 @@ public class MagicTree {
     public void playParticles()
     {
         if (blocks != null && blocks.size() > 0) {
+            if (level.getAmbientEffect() != null) {
+                level.getAmbientEffect().playEffect(location.clone().add(0, level.getTreeHeight(), 0));
+            }
             for (Block block : blocks) {
                 if (!block.getChunk().isLoaded())
                     continue;
@@ -143,9 +181,6 @@ public class MagicTree {
                     if (level.getBodyEffect() != null) {
                         level.getBodyEffect().playEffect(block.getLocation());
                     }
-                }
-                if (level.getAmbientEffect() != null) {
-                    level.getAmbientEffect().playEffect(location.clone().add(0, level.getTreeHeight(), 0));
                 }
             }
         }
@@ -179,13 +214,19 @@ public class MagicTree {
     }
 
     public void unbuild() {
+        unbuild(true);
+    }
+
+    public void unbuild(boolean playBlockEffects) {
         Block block;
         Location loc;
         for (Entry<Block, UUID> cBlock : blockAssociation.entrySet()) {
             if (cBlock.getValue().equals(treeuid)) {
                 block = cBlock.getKey();
                 loc = block.getLocation();
-                loc.getWorld().playEffect(loc, Effect.STEP_SOUND, block.getType());
+                if (playBlockEffects && loc.getWorld() != null) {
+                    loc.getWorld().playEffect(loc, Effect.STEP_SOUND, block.getType());
+                }
                 block.setType(Material.AIR);
                 blockAssociation.remove(block);
             }
@@ -291,14 +332,14 @@ public class MagicTree {
         List<ItemStack> leftovers = putRefundsInContainer(Material.CHEST, refundItems);
         if (leftovers != null) {
             dropRefunds(leftovers);
-            notifyRefund(refundTarget, TextUtils.success(LocaleManager.text("messages.tree.refund.chest", "Your tree resources were returned in a chest.")));
+            notifyRefund(refundTarget, LocaleManager.text("messages.tree.refund.chest", "<xm-success>Your tree resources were returned in a chest.</xm-success>"));
             return;
         }
 
         leftovers = putRefundsInContainer(Material.BARREL, refundItems);
         if (leftovers != null) {
             dropRefunds(leftovers);
-            notifyRefund(refundTarget, TextUtils.success(LocaleManager.text("messages.tree.refund.barrel", "Your tree resources were returned in a barrel.")));
+            notifyRefund(refundTarget, LocaleManager.text("messages.tree.refund.barrel", "<xm-success>Your tree resources were returned in a barrel.</xm-success>"));
             return;
         }
 
@@ -306,9 +347,9 @@ public class MagicTree {
         dropRefunds(leftovers);
         if (refundTarget != null) {
             if (leftovers.isEmpty()) {
-                notifyRefund(refundTarget, TextUtils.success(LocaleManager.text("messages.tree.refund.inventory", "Your tree resources were returned to your inventory.")));
+                notifyRefund(refundTarget, LocaleManager.text("messages.tree.refund.inventory", "<xm-success>Your tree resources were returned to your inventory.</xm-success>"));
             } else {
-                notifyRefund(refundTarget, TextUtils.info(LocaleManager.text("messages.tree.refund.inventory-overflow", "Your tree resources were returned. Inventory overflow dropped at the tree.")));
+                notifyRefund(refundTarget, LocaleManager.text("messages.tree.refund.inventory-overflow", "<xm-info>Your tree resources were returned. Inventory overflow dropped at the tree.</xm-info>"));
             }
         }
     }
@@ -401,6 +442,33 @@ public class MagicTree {
 
     public int getScheduledPresents() {
         return scheduledPresents;
+    }
+
+    public boolean isBuilt() {
+        return blocks != null && !blocks.isEmpty();
+    }
+
+    public int getBuiltBlockCount() {
+        return blocks != null ? blocks.size() : 0;
+    }
+
+    public int getNearbyPresentCount() {
+        if (location == null || location.getWorld() == null) {
+            return 0;
+        }
+        int presentCount = 0;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                if (x == 0 && z == 0) {
+                    continue;
+                }
+                Block block = location.clone().add(x, 0, z).getBlock();
+                if (XMas.isPresentHead(block)) {
+                    presentCount++;
+                }
+            }
+        }
+        return presentCount;
     }
 
     public boolean hasScheduledPresents() {

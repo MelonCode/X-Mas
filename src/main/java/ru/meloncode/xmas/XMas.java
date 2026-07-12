@@ -31,6 +31,11 @@ class XMas {
         trees.put(tree.getTreeUID(), tree);
         trees_byChunk.computeIfAbsent(LocationUtils.getChunkKey(tree.getLocation()), aLong -> new ArrayList<>()).add(tree);
         tree.save();
+        if (Main.getInstance() instanceof Main plugin && plugin.getEventProgress() != null) {
+            plugin.getEventProgress().recordTreeCreated(player, tree);
+        }
+        Effects.CRYSTAL_SAPLING_GREEN.playEffect(loc);
+        Effects.CRYSTAL_SAPLING_WHITE.playEffect(loc);
     }
 
     public static void addMagicTree(MagicTree tree) {
@@ -58,6 +63,9 @@ class XMas {
         if (unbuild) {
             tree.unbuild();
         }
+        if (Main.getInstance() instanceof Main plugin && plugin.getEventProgress() != null) {
+            plugin.getEventProgress().recordTreeRemoved(tree);
+        }
         TreeSerializer.removeTree(tree);
         trees.remove(tree.getTreeUID());
         List<MagicTree> chunkTrees = trees_byChunk.get(LocationUtils.getChunkKey(tree.getLocation()));
@@ -78,7 +86,12 @@ class XMas {
         World world = loc.getWorld();
         if (world != null) {
             if (RANDOM.nextFloat() < Main.LUCK_CHANCE || !Main.LUCK_CHANCE_ENABLED) {
-                world.dropItemNaturally(loc, new ItemStack(Main.gifts.get(RANDOM.nextInt(Main.gifts.size()))));
+                ItemStack gift = Main.rollConfiguredGift();
+                if (gift == null) {
+                    block.setType(Material.AIR);
+                    return;
+                }
+                world.dropItemNaturally(loc, gift);
                 Effects.TREE_SWAG.playEffect(loc);
                 TextUtils.sendMessage(player, LocaleManager.GIFT_LUCK);
             } else {
@@ -87,6 +100,9 @@ class XMas {
                 TextUtils.sendMessage(player, LocaleManager.GIFT_FAIL);
             }
             block.setType(Material.AIR);
+            if (Main.getInstance() instanceof Main plugin && plugin.getEventProgress() != null) {
+                plugin.getEventProgress().recordGiftClaim(player);
+            }
         }
     }
 
@@ -109,6 +125,9 @@ class XMas {
     }
 
     public static MagicTree getTree(UUID treeUID) {
+        if (treeUID == null) {
+            return null;
+        }
         return trees.get(treeUID);
     }
 }

@@ -33,15 +33,6 @@ core:
  # Reload behavior: /xmastree reload applies immediately for future placement checks.
  tree-limit: 3
 
- commands:
-  # Registers the legacy /xmas alias alongside the primary /xmastree command.
-  # Default: true
-  # Safe values: true or false
-  # Reload behavior:
-  # - File edits apply on /xmastree reload.
-  # - /xmastree debug toggle core.commands.legacy-command-enabled true|false applies immediately.
-  legacy-command-enabled: true
-
  # Automatic end-of-event behavior.
  holiday-ends:
   # Enables time-based event shutdown.
@@ -153,14 +144,20 @@ xmas:
  # Safe values:
  # - MATERIAL
  # - MATERIAL:AMOUNT
- # - Base64 item strings saved by /xmastree addhand
+ # - Base64 item strings saved by /xmastree gifts addhand or /xmastree addhand
+ # - Weighted entries:
+ #   - item: MATERIAL or MATERIAL:AMOUNT or Base64 item string
+ #     weight: positive whole number
  # Notes:
  # - Use modern Paper/Bukkit material names only.
+ # - Existing simple entries are treated as weight 1.
+ # - Higher weights are more likely to roll. For example, weight 10 is ten times as likely as weight 1.
  # - Invalid or legacy material names are skipped safely.
- # - /xmastree addhand appends the exact held item and saves it immediately.
+ # - /xmastree gifts addhand appends the exact held item and saves it immediately.
+ # - /xmastree gifts weight <index> <weight> converts that entry to the structured weighted format.
  # Reload behavior:
  # - File edits apply on /xmastree reload.
- # - /xmastree addhand applies immediately and persists to disk.
+ # - /xmastree gifts addhand and /xmastree gifts weight apply immediately and persist to disk. The old /xmastree addhand shortcut still works.
  gifts:
   - DIAMOND
   - EMERALD
@@ -178,12 +175,191 @@ xmas:
   - DIAMOND_HOE
   - NAME_TAG
 
+ # Event progress milestones.
+ # Default: enabled examples for personal daily gifts, total gifts, streaks, and community gift openings.
+ # Safe values:
+ # - enabled: true or false
+ # - type: daily_gifts, total_gifts, streak_days, or community_gifts
+ # - target: whole number 1 or higher
+ # - reward-commands: console commands without a leading slash
+ # Supported reward-command tokens:
+ # - {player}: player who claimed a personal milestone; for community milestones, the staff/admin claimer
+ # - {claimer}: player or staff/admin who claimed the milestone
+ # - {milestone}: config key, such as streak_7 or gifts_250
+ # - {display_name}: configured display-name
+ # - {target}: configured milestone target
+ # - {progress}: progress value at claim time
+ # Example reward commands:
+ # - cmi kit christmas {player}
+ # - cmi money give {player} 250
+ # - cmi toast {player} -t:task -icon:EMERALD -text:"{display_name} complete!"
+ # - cmi broadcast ! <gold>{display_name}</gold> reached: {progress}/{target}
+ # Reload behavior:
+ # - /xmastree reload applies milestone definition changes immediately.
+ # - Existing progress and claimed-state are stored separately in progress.yml and are preserved.
+ milestones:
+  player:
+   daily_gifts_6:
+    # Enables the personal milestone for opening 6 presents in one server-local day.
+    # Default: true
+    # Reload behavior: /xmastree reload applies immediately.
+    enabled: true
+    # Progress type tracked for this milestone.
+    # Default: daily_gifts
+    # Safe values: daily_gifts, total_gifts, streak_days
+    # Reload behavior: /xmastree reload applies immediately.
+    type: daily_gifts
+    # Required present opens today.
+    # Default: 6
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload applies immediately.
+    target: 6
+    # Display name shown in /xmastree milestones and the journal.
+    # Default: Hardcore Elf
+    # Reload behavior: /xmastree reload applies immediately.
+    display-name: Hardcore Elf
+    # Commands run from console when the player claims this milestone.
+    # Default: runs the global gift spawn command once.
+    # Safe values: valid console commands; supported tokens are listed above under xmas.milestones.
+    # Reload behavior: /xmastree reload applies immediately.
+    reward-commands:
+     - xmastree gifts
+   streak_7:
+    # Enables the personal milestone for opening at least one present on 7 consecutive server-local days.
+    # Default: true
+    # Reload behavior: /xmastree reload applies immediately.
+    enabled: true
+    # Progress type tracked for this milestone.
+    # Default: streak_days
+    # Safe values: daily_gifts, total_gifts, streak_days
+    # Reload behavior: /xmastree reload applies immediately.
+    type: streak_days
+    # Required consecutive days with at least one present opened.
+    # Default: 7
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload applies immediately.
+    target: 7
+    # Display name shown in /xmastree milestones and the journal.
+    # Default: Seven-Day Spark
+    # Reload behavior: /xmastree reload applies immediately.
+    display-name: Seven-Day Spark
+    # Commands run from console when the player claims this milestone.
+    # Default: runs the global gift spawn command once.
+    # Safe values: valid console commands; supported tokens are listed above under xmas.milestones.
+    # Reload behavior: /xmastree reload applies immediately.
+    reward-commands:
+     - xmastree gifts
+   total_gifts_25:
+    # Enables the personal milestone for opening 25 presents during the event.
+    # Default: true
+    # Reload behavior: /xmastree reload applies immediately.
+    enabled: true
+    # Progress type tracked for this milestone.
+    # Default: total_gifts
+    # Safe values: daily_gifts, total_gifts, streak_days
+    # Reload behavior: /xmastree reload applies immediately.
+    type: total_gifts
+    # Required present opens for the whole event.
+    # Default: 25
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload applies immediately.
+    target: 25
+    # Display name shown in /xmastree milestones and the journal.
+    # Default: Gift Gatherer
+    # Reload behavior: /xmastree reload applies immediately.
+    display-name: Gift Gatherer
+    # Commands run from console when the player claims this milestone.
+    # Default: gives the claiming player one Christmas Crystal.
+    # Safe values: valid console commands; supported tokens are listed above under xmas.milestones.
+    # Reload behavior: /xmastree reload applies immediately.
+    reward-commands:
+     - xmastree give {player}
+  community:
+   gifts_100:
+    # Enables the community milestone for 100 total present opens by all players.
+    # Default: true
+    # Reload behavior: /xmastree reload applies immediately.
+    enabled: true
+    # Progress type tracked for this community milestone.
+    # Default: community_gifts
+    # Safe values: community_gifts
+    # Reload behavior: /xmastree reload applies immediately.
+    type: community_gifts
+    # Required community-wide present opens.
+    # Default: 100
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload applies immediately.
+    target: 100
+    # Display name shown in /xmastree community.
+    # Default: Shared Sleigh Run
+    # Reload behavior: /xmastree reload applies immediately.
+    display-name: Shared Sleigh Run
+    # Commands run from console when an admin claims this community milestone.
+    # Default: runs the global gift spawn command once.
+    # Safe values: valid console commands; supported tokens are listed above under xmas.milestones.
+    # Reload behavior: /xmastree reload applies immediately.
+    reward-commands:
+     - xmastree gifts
+   gifts_250:
+    # Enables the community milestone for 250 total present opens by all players.
+    # Default: true
+    # Reload behavior: /xmastree reload applies immediately.
+    enabled: true
+    # Progress type tracked for this community milestone.
+    # Default: community_gifts
+    # Safe values: community_gifts
+    # Reload behavior: /xmastree reload applies immediately.
+    type: community_gifts
+    # Required community-wide present opens.
+    # Default: 250
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload applies immediately.
+    target: 250
+    # Display name shown in /xmastree community.
+    # Default: Village Cheer Rush
+    # Reload behavior: /xmastree reload applies immediately.
+    display-name: Village Cheer Rush
+    # Commands run from console when an admin claims this community milestone.
+    # Default: runs the global gift spawn command twice.
+    # Safe values: valid console commands; supported tokens are listed above under xmas.milestones.
+    # Reload behavior: /xmastree reload applies immediately.
+    reward-commands:
+     - xmastree gifts
+     - xmastree gifts
+   gifts_500:
+    # Enables the community milestone for 500 total present opens by all players.
+    # Default: true
+    # Reload behavior: /xmastree reload applies immediately.
+    enabled: true
+    # Progress type tracked for this community milestone.
+    # Default: community_gifts
+    # Safe values: community_gifts
+    # Reload behavior: /xmastree reload applies immediately.
+    type: community_gifts
+    # Required community-wide present opens.
+    # Default: 500
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload applies immediately.
+    target: 500
+    # Display name shown in /xmastree community.
+    # Default: North Pole Finale
+    # Reload behavior: /xmastree reload applies immediately.
+    display-name: North Pole Finale
+    # Commands run from console when an admin claims this community milestone.
+    # Default: runs the global gift spawn command three times.
+    # Safe values: valid console commands; supported tokens are listed above under xmas.milestones.
+    # Reload behavior: /xmastree reload applies immediately.
+    reward-commands:
+     - xmastree gifts
+     - xmastree gifts
+     - xmastree gifts
+
  # Tree stage settings.
  # Notes:
  # - gift-cooldown values are written in seconds and converted using core.update-speed.
  # - lvlup sections use modern material names and item counts for the next stage.
  # - Particle names should come from the Paper Particle enum:
- #   https://jd.papermc.io/paper/26.1.2/org/bukkit/Particle.html
+ #   https://jd.papermc.io/paper/26.2/org/bukkit/Particle.html
  # - Existing loaded trees may keep their current stage objects until the next full restart.
  #   /xmastree reload is best for new trees and newly loaded trees, while a restart is recommended
  #   when you want every existing tree to use the refreshed stage settings.
@@ -229,10 +405,10 @@ xmas:
      # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
      speed: 0.01
      # Number of ambient particles spawned per effect tick.
-     # Default: 2
+     # Default: 5
      # Safe values: whole numbers 0 or higher
      # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
-     count: 2
+     count: 5
     swag:
      # Enables the ornament-style particle effect for saplings.
      # Default: false
@@ -279,10 +455,10 @@ xmas:
      # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
      enabled: true
      # Particle type for the small tree ambient effect.
-     # Default: CHERRY_LEAVES
+     # Default: ITEM_SNOWBALL
      # Safe values: a valid Particle enum name
      # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
-     particle: CHERRY_LEAVES
+     particle: ITEM_SNOWBALL
      # Horizontal X offset for the small tree ambient particle spread.
      # Default: 1.0
      # Safe values: decimal numbers, usually 0.0 or higher
@@ -484,7 +660,7 @@ xmas:
     GLOWSTONE_DUST: 16
 
   magic_tree:
-   # Delay before present spawns at the max-level magic_tree stage.
+   # Delay before present spawns at the magic_tree stage.
    # Default: 120
    # Units: seconds before scaling by core.update-speed
    # Safe values: 0 or higher
@@ -570,6 +746,146 @@ xmas:
      # Safe values: true or false
      # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
      enabled: false
+
+   lvlup:
+    # Nether stars required to grow from magic_tree to super_tree.
+    # Default: 1
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload for newly loaded trees; existing loaded trees keep their saved remaining requirements.
+    NETHER_STAR: 1
+    # Diamond blocks required to grow from magic_tree to super_tree.
+    # Default: 2
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload for newly loaded trees; existing loaded trees keep their saved remaining requirements.
+    DIAMOND_BLOCK: 2
+    # Emerald blocks required to grow from magic_tree to super_tree.
+    # Default: 2
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload for newly loaded trees; existing loaded trees keep their saved remaining requirements.
+    EMERALD_BLOCK: 2
+    # Amethyst shards required to grow from magic_tree to super_tree.
+    # Default: 16
+    # Safe values: whole numbers 1 or higher
+    # Reload behavior: /xmastree reload for newly loaded trees; existing loaded trees keep their saved remaining requirements.
+    AMETHYST_SHARD: 16
+
+  super_tree:
+   # Delay before present spawns at the max-level super_tree stage.
+   # Default: 90
+   # Units: seconds before scaling by core.update-speed
+   # Safe values: 0 or higher
+   # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+   gift-cooldown: 90
+
+   particles:
+    ambient:
+     # Enables the ambient particle effect for super trees.
+     # Default: true
+     # Safe values: true or false
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     enabled: true
+     # Particle type for the super tree ambient effect.
+     # Default: ITEM_SNOWBALL
+     # Safe values: a valid Particle enum name
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     particle: ITEM_SNOWBALL
+     # Horizontal X offset for the super tree ambient particle spread.
+     # Default: 2.2
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-x: 2.2
+     # Vertical Y offset for the super tree ambient particle spread.
+     # Default: 2.4
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-y: 2.4
+     # Horizontal Z offset for the super tree ambient particle spread.
+     # Default: 2.2
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-z: 2.2
+     # Particle speed value passed to the Paper particle API.
+     # Default: 0.0
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     speed: 0.0
+     # Number of ambient particles spawned per effect tick.
+     # Default: 5
+     # Safe values: whole numbers 0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     count: 5
+    swag:
+     # Enables the ornament-style particle effect for super trees.
+     # Default: true
+     # Safe values: true or false
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     enabled: true
+     # Particle type for the super tree ornament effect.
+     # Default: DUST
+     # Safe values: a valid Particle enum name supported by the plugin's simple particle loader
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     particle: DUST
+     # Horizontal X offset for the super tree ornament particle spread.
+     # Default: 0.45
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-x: 0.45
+     # Vertical Y offset for the super tree ornament particle spread.
+     # Default: 0.45
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-y: 0.45
+     # Horizontal Z offset for the super tree ornament particle spread.
+     # Default: 0.45
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-z: 0.45
+     # Particle speed value passed to the Paper particle API.
+     # Default: 6.0
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     speed: 6.0
+     # Number of ornament particles spawned per effect tick.
+     # Default: 18
+     # Safe values: whole numbers 0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     count: 18
+    body:
+     # Enables the trunk/body particle effect for super trees.
+     # Default: true
+     # Safe values: true or false
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     enabled: true
+     # Particle type for the super tree trunk/body effect.
+     # Default: SPORE_BLOSSOM_AIR
+     # Safe values: a valid Particle enum name
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     particle: SPORE_BLOSSOM_AIR
+     # Horizontal X offset for the super tree body particle spread.
+     # Default: 0.55
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-x: 0.55
+     # Vertical Y offset for the super tree body particle spread.
+     # Default: 1.75
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-y: 1.75
+     # Horizontal Z offset for the super tree body particle spread.
+     # Default: 0.55
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     offset-z: 0.55
+     # Particle speed value passed to the Paper particle API.
+     # Default: 0.0
+     # Safe values: decimal numbers, usually 0.0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     speed: 0.0
+     # Number of trunk/body particles spawned per effect tick.
+     # Default: 6
+     # Safe values: whole numbers 0 or higher
+     # Reload behavior: /xmastree reload for new trees; restart recommended for fully consistent existing-tree behavior.
+     count: 6
 
    # Max-level trees have no next-stage ingredient requirements.
    # Default: empty section

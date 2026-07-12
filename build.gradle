@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.onemb.xmas'
-version = '2.1.0-032'
+version = '2.1.0-051'
 def projectVersion = version.toString()
 def enableDeprecationLint = providers.gradleProperty('lintDeprecatedApi').map { it.toBoolean() }.getOrElse(false)
 

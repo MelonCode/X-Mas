@@ -1,0 +1,12 @@
+id: xmas-tree
+name: XMas Tree
+category: custom-server-plugin
+summary: Plant, grow, and celebrate upgradeable Christmas trees with presents, streaks, milestones, and preserved legacy event trees.
+main_command: /xmastree
+docs_url: https://docs.1moreblock.com/custom-server-plugins/xmas-tree/
+player_guide: player-guide.md
+technical_readme: ../README.md
+java_target: 25
+paper_target: 26.2
+official_project: true
+repository: mrfdev/XMasTree

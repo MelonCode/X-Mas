@@ -16,5 +16,7 @@ class Effects {
 
     public static final ParticleContainer GROW = new ParticleContainer(Particle.HAPPY_VILLAGER, 0.25f, 0.25f, 0.25f, 1f, 16);
     public static final ParticleContainer AMBIENT_SNOW = new ParticleContainer(Particle.ITEM_SNOWBALL, 1.5f, 3f, 1.5f, 0, 16);
+    public static final ParticleContainer CRYSTAL_SAPLING_GREEN = new ParticleContainer(Particle.SPORE_BLOSSOM_AIR, 0.45f, 0.55f, 0.45f, 0.02f, 12);
+    public static final ParticleContainer CRYSTAL_SAPLING_WHITE = new ParticleContainer(Particle.FIREWORK, 0.35f, 0.45f, 0.35f, 0.01f, 8);
 
 }

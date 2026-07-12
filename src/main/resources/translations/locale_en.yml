@@ -44,19 +44,19 @@ messages:
   grow-not-enough-place: <xm-warning>There is not enough room for the tree to grow.</xm-warning>
   grow-lvl-max: <xm-warning>This tree has reached its maximum level.</xm-warning>
   tree-limit: <xm-warning>Hey, do not be greedy. You have reached your tree limit.</xm-warning>
-  destroy-sapling: You can cut down this tree.
-  destroy-leaves-santa: Santa Claus sees everything.
-  destroy-leaves-tut: To destroy a tree, cut the log.
-  destroy-warning: You can cut down the tree. Hit it again to confirm.
-  destroy-resource-back: Your used upgrade items will be returned for collection.
-  destroy-tut: Hit it again to confirm.
+  destroy-sapling: <xm-warning>You can cut down this tree.</xm-warning>
+  destroy-leaves-santa: <xm-accent>Santa Claus sees everything.</xm-accent>
+  destroy-leaves-tut: <xm-warning>To destroy a tree, cut the log.</xm-warning>
+  destroy-warning: <xm-warning>You can cut down the tree. Hit it again to confirm.</xm-warning>
+  destroy-resource-back: <xm-info>Your used upgrade items will be returned for collection.</xm-info>
+  destroy-tut: <xm-muted>Hit it again to confirm.</xm-muted>
   destroy-fail-owner: <xm-error>It is not your tree.</xm-error>
-  destroy-complete: Your tree has been packed away for the season.
+  destroy-complete: <xm-success>Your tree has been packed away for the season.</xm-success>
   refund:
-   chest: Your tree resources were returned in a chest.
-   barrel: Your tree resources were returned in a barrel.
-   inventory: Your tree resources were returned to your inventory.
-   inventory-overflow: Your tree resources were returned. Inventory overflow dropped at the tree.
+   chest: <xm-success>Your tree resources were returned in a chest.</xm-success>
+   barrel: <xm-success>Your tree resources were returned in a barrel.</xm-success>
+   inventory: <xm-success>Your tree resources were returned to your inventory.</xm-success>
+   inventory-overflow: <xm-info>Your tree resources were returned. Inventory overflow dropped at the tree.</xm-info>
 
  gift:
   luck-message: _UNUSED
@@ -72,28 +72,51 @@ command:
  help:
   - '<xm-text>Use </xm-text><xm-command>/xmastree</xm-command><xm-text> to show plugin version and status.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree help</xm-command><xm-text> to show this command list.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree give \<player\></xm-command><xm-text> to give a player a Christmas Crystal.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree info</xm-command><xm-text> to learn how the XMas Tree event works.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree give \<player></xm-command><xm-text> to give a player a Christmas Crystal.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree gifts</xm-command><xm-text> to spawn presents under all trees.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree gifts list [page]</xm-command><xm-text> to list configured gift rewards.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree gifts roll</xm-command><xm-text> to preview one random gift roll.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree gifts remove \<index\></xm-command><xm-text> to remove a configured gift reward.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree addhand</xm-command><xm-text> to add your held item as a gift.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree gifts roll</xm-command><xm-text> to preview one weighted random gift roll.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree gifts remove \<index></xm-command><xm-text> to remove a configured gift reward.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree gifts weight \<index> \<weight></xm-command><xm-text> to set a gift roll weight.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree gifts addhand</xm-command><xm-text> to add your held item as a gift.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree reload</xm-command><xm-text> to reload config, translations, theme, and crystal item text.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree inspect</xm-command><xm-text> to inspect the tree you are looking at.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree test sound first|repeat [player]</xm-command><xm-text> to preview grow sound volume.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree test particle \<level\> [effect] [player]</xm-command><xm-text> to preview configured particles.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree data backup</xm-command><xm-text> to back up trees.yml.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree test particle \<level> [effect] [player]</xm-command><xm-text> to preview configured particles.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree test refund [tree-uuid|nearest [player]]</xm-command><xm-text> to dry-run refund delivery for a tree.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree data backup [trees|progress|all]</xm-command><xm-text> to back up event data.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree data validate</xm-command><xm-text> to check saved tree data.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree data migrate-world \<from\> \<to\> [dry-run|apply]</xm-command><xm-text> to migrate saved tree world names.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree data report</xm-command><xm-text> to show the event wrap-up report.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree data migrate-world \<from> \<to> [dry-run|apply]</xm-command><xm-text> to migrate saved tree world names.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree journal [gui]</xm-command><xm-text> to view your tree journal and event progress.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree milestones</xm-command><xm-text> to view and claim personal milestone rewards.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree milestones test \<key> [player]</xm-command><xm-text> to preview personal milestone reward commands.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree community</xm-command><xm-text> to view community milestone progress.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree community test \<key></xm-command><xm-text> to preview community milestone reward commands.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree debug</xm-command><xm-text> to open the status debug section.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree debug status</xm-command><xm-text> and other categories for status, commands, permissions, placeholders, and toggles.</xm-text>'
-  - '<xm-text>Use </xm-text><xm-command>/xmastree debug toggle \<key\> true|false</xm-command><xm-text> to change supported global toggles.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree debug status</xm-command><xm-text> and other categories for status, commands, permissions, placeholders, diagnostics, and toggles.</xm-text>'
+  - '<xm-text>Use </xm-text><xm-command>/xmastree debug toggle \<key> true|false</xm-command><xm-text> to change supported global toggles.</xm-text>'
   - '<xm-text>Use </xm-text><xm-command>/xmastree end</xm-command><xm-text> to end the event.</xm-text>'
+ info:
+  - '<xm-accent><bold>XMas Tree Event Info</bold></xm-accent>'
+  - '<xm-text>XMas Tree is the 1MoreBlock Christmas tree event plugin.</xm-text>'
+  - '<xm-text>Get a </xm-text><xm-accent>Christmas Crystal</xm-accent><xm-text>, place a </xm-text><xm-label>spruce sapling</xm-label><xm-text>, then right-click the sapling with the crystal.</xm-text>'
+  - '<xm-text>Right-click your tree while holding the listed ingredients to grow it through multiple levels.</xm-text>'
+  - '<xm-text>Grown trees spawn gifts below them. Right-click those gifts to claim rewards.</xm-text>'
+  - '<xm-text>After the event, break the tree log to remove the tree and reclaim the ingredients you spent.</xm-text>'
+  - '<xm-text>Open gifts daily, weekly, and across all 25 event days to build streaks, hit personal milestones, and help unlock community milestones.</xm-text>'
+  - '<xm-text>Useful commands: </xm-text><xm-command>/xmastree journal</xm-command><xm-muted>, </xm-muted><xm-command>/xmastree milestones</xm-command><xm-muted>, </xm-muted><xm-command>/xmastree community</xm-command>'
+  - '<xm-text>Docs: </xm-text><xm-command><click:open_url:https://docs.1moreblock.com/custom-server-plugins/xmas-tree/>https://docs.1moreblock.com/custom-server-plugins/xmas-tree/</click></xm-command>'
+  - '<xm-muted>Run </xm-muted><xm-command>/xmastree</xm-command><xm-muted> to see the installed plugin version and event status.</xm-muted>'
  player-offline: '<xm-error>Player not found.</xm-error>'
  no-player-name: '<xm-warning>Missing player name.</xm-warning>'
  giveaway: '<xm-accent-2>Ho!</xm-accent-2> <xm-accent>Ho!</xm-accent> <xm-label>Ho!</xm-label> <xm-info>Looks like it is time to check presents.</xm-info>'
- no-permission: '<xm-error>You do not have permission to use this command.</xm-error>'
- player-only: '<xm-error>Only players can use this command.</xm-error>'
+  no-permission: '<xm-error>You do not have permission to use this command.</xm-error>'
+  player-only: '<xm-error>Only players can use this command.</xm-error>'
+  player-required: '<xm-error>Player name required.</xm-error>'
+  community:
+   confirm-required: '<xm-warning>Run the confirm command to claim this community milestone.</xm-warning>'
  hold-item-first: '<xm-error>Hold an item before running {command}.</xm-error>'
  gift-added: '<xm-success>Added the held item to the gift list.</xm-success>'
  reload-success: '<xm-success>{plugin_name} configuration reloaded.</xm-success>'
@@ -102,11 +125,22 @@ command:
  test:
   no-particles: '<xm-warning>No enabled particle effects matched that preview.</xm-warning>'
  data:
-  backup-created: '<xm-success>Tree data backup created.</xm-success>'
-  backup-failed: '<xm-error>Unable to back up trees.yml.</xm-error>'
+  backup-created: '<xm-success>Data backup created.</xm-success>'
+  backup-failed: '<xm-error>Unable to back up data.</xm-error>'
   migration-applied: '<xm-warning>World migration saved. Restart the server before testing migrated trees.</xm-warning>'
   migration-failed: '<xm-error>Unable to migrate tree world names.</xm-error>'
- legacy-alias-enabled: '<xm-muted>Legacy alias: </xm-muted><xm-command>/xmas</xm-command><xm-muted> still works.</xm-muted>'
+progress:
+ milestone:
+  unknown: Unknown milestone.
+  already-claimed: That milestone is already claimed.
+  not-ready: That milestone is not ready yet.
+  claimed: Milestone claimed!
+  invalid: Skipping invalid milestone {key}
+ history:
+  tree-created: '{time} - Created {level} at {location} ({tree})'
+  tree-removed: '{time} - Removed {level} at {location} ({tree})'
+  player-milestone-claimed: '{time} - Claimed {display_name} ({key}) at {progress}/{target}'
+  community-milestone-claimed: '{time} - {claimer} claimed {display_name} ({key}) at {progress}/{target}'
 
 ui:
  status:
@@ -121,7 +155,6 @@ ui:
    loaded-trees: Loaded Trees
    tree-owners: Tree Owners
    help: Help
-   legacy-alias: Legacy Alias
   values:
    in-progress: '<xm-success>In Progress</xm-success>'
    holidays-end: '<xm-error>Holidays End</xm-error>'
@@ -129,19 +162,32 @@ ui:
  command-descriptions:
   status: status
   help: command list
+  info: how the XMas Tree event works
   give: give a Christmas Crystal
   gifts: spawn presents under all trees
   gifts-list: list configured gifts
-  gifts-roll: preview a random gift roll
+  gifts-roll: preview a weighted random gift roll
   gifts-remove: remove a configured gift
-  addhand: add held item to gifts
+  gifts-weight: set a gift roll weight
+  gifts-addhand: add held item to gifts
+  addhand: legacy shortcut for gifts addhand
   reload: reload config and translations
   inspect: inspect the tree you are looking at
   test-sound: preview grow sounds
   test-particle: preview configured particles
-  data-backup: back up trees.yml
+  test-refund: dry-run tree refund delivery
+  data-backup: back up event data
   data-validate: validate trees.yml
+  data-report: show event wrap-up report
   data-migrate-world: migrate saved tree world names
+  journal: view your tree journal and event progress
+  journal-gui: open the tree journal GUI
+  milestones: view and claim milestone rewards
+  milestones-test: preview personal milestone reward commands
+  milestones-claim: claim a personal milestone reward
+  community: view community milestone progress
+  community-test: preview community milestone reward commands
+  community-claim: claim a community milestone reward
   end: end the event
   debug: open the status debug section
   debug-section: extended debug output by category
@@ -151,13 +197,19 @@ ui:
   admin: allows all {plugin_name} commands and overrides
   status: shows /xmastree status output
   help: shows /xmastree help output
+  info: shows /xmastree info output
   give: allows /xmastree give
   gifts: allows /xmastree gifts
-  addhand: allows /xmastree addhand
+  addhand: allows /xmastree gifts addhand and /xmastree addhand
   reload: allows /xmastree reload
   inspect: allows /xmastree inspect
   test: allows /xmastree test
   data: allows /xmastree data
+  journal: allows /xmastree journal
+  milestones: allows /xmastree milestones
+  milestones-claim: allows /xmastree milestones claim
+  community: allows /xmastree community
+  community-claim: allows /xmastree community claim
   debug: allows /xmastree debug
   debug-toggle: allows /xmastree debug toggle
   end: allows /xmastree end
@@ -171,6 +223,7 @@ ui:
    permissions: Permissions
    placeholders: Placeholders
    config: Config
+   diagnostics: Diagnostics
   labels:
    usage: Usage
    keys: Keys
@@ -193,18 +246,32 @@ ui:
   labels:
    owner: Owner
    tree-id: Tree ID
+   owner-online: Owner Online
+   owner-loaded-trees: Owner Loaded Trees
    level: Level
+   next-level: Next Level
    location: Location
+   world-loaded: World Loaded
+   chunk-loaded: Chunk Loaded
+   tree-built: Tree Built
+   built-blocks: Built Blocks
    can-level-up: Can Level Up
+   next-space-clear: Next Space Clear
+   gift-cooldown: Gift Cooldown
    present-timer: Present Timer
    scheduled-presents: Scheduled Presents
+   nearby-presents: Nearby Presents
+   requirement-progress: Requirement Progress
    remaining: Remaining Requirements
+   spent-resources: Spent Resources
+   resource-back: Resource Back
    refund-preview: Refund Preview
    requested: Requested
    try: Try
    usage: Usage
   values:
    none: none
+   disabled: disabled
    unknown-owner: unknown
    unknown-location: unknown
 
@@ -214,14 +281,37 @@ ui:
    locale: Locale
    gifts: Gifts
    present-heads: Present Heads
+   configured-present-heads: Configured Present Heads
+   texture-heads: Texture Heads
+   legacy-player-heads: Legacy Player Heads
+   invalid-present-heads: Invalid Present Heads
    trees: Trees
    owners: Owners
    particles: Particles
    resource-back: Resource Back
-   legacy-alias: Legacy Alias
    sounds: Sounds
+   invalid-gifts: Invalid Gifts
+   tree-data-warnings: Tree Data Warnings
+   warnings: Warnings
+   warning: Warning
+
+ diagnostics:
+  labels:
+   status: Status
+   configured-present-heads: Configured Present Heads
+   valid-present-heads: Valid Present Heads
+   texture-heads: Texture URL Heads
+   legacy-player-heads: Legacy Player Heads
+   invalid-present-heads: Invalid Present Heads
+   configured-gifts: Configured Gifts
+   valid-gifts: Valid Gifts
+   invalid-gifts: Invalid Gifts
+   tree-data-warnings: Tree Data Warnings
+   warning-count: Warning Count
+   warning: Warning
 
  test:
+  refund-title: Refund Delivery Dry Run
   labels:
    usage: Usage
    unknown-test: Unknown Test
@@ -233,6 +323,18 @@ ui:
    level: Level
    levels: Levels
    effects-played: Effects Played
+   tree-id: Tree ID
+   owner: Owner
+   location: Location
+   resource-back: Resource Back
+   refund-items: Refund Items
+   delivery-order: Delivery Order
+   mode: Mode
+   no-changes: No Changes
+  values:
+   delivery-order: chest -> barrel -> player inventory -> floor drops
+   dry-run: dry-run
+   safe-preview: This command only previews refund delivery. It does not edit blocks, inventories, tree data, or config.
 
  gifts:
   title: Gift Pool
@@ -240,15 +342,20 @@ ui:
    usage: Usage
    unknown-action: Unknown Gift Action
    total: Total
+   total-weight: Total Weight
    rolled: Rolled
    removed: Removed
+   updated: Updated
    index: Index
+   weight: Weight
+   chance: Chance
    try: Try
   values:
    empty: '<xm-warning>No gifts are configured.</xm-warning>'
 
  data:
   title: Tree Data Validation
+  report-title: Event Wrap-Up Report
   world-migration-title: Tree World Migration
   labels:
    usage: Usage
@@ -258,6 +365,15 @@ ui:
    error: Error
    stored-trees: Stored Trees
    loaded-trees: Loaded Trees
+   tree-owners: Tree Owners
+   level-counts: Level Counts
+   gifts-opened: Gifts Opened
+   players-with-gifts: Players With Gifts
+   claimed-player-milestones: Claimed Player Milestones
+   claimed-community-milestones: Claimed Community Milestones
+   legacy-trees-preserved: Legacy Trees Preserved
+   returning-player-reward-list: Returning-Player Reward List
+   community-milestone-history: Community Milestone History
    status: Status
    invalid-tree-ids: Invalid Tree IDs
    invalid-owners: Invalid Owners
@@ -274,7 +390,46 @@ ui:
    apply-command: Apply Command
   values:
    clean: '<xm-success>clean</xm-success>'
-   warnings: '<xm-warning>warnings</xm-warning>'
+  warnings: '<xm-warning>warnings</xm-warning>'
+
+ journal:
+  title: '<xm-accent><bold>Tree Journal</bold></xm-accent>'
+  labels:
+   player: Player
+   trees: Trees
+   highest-tree: Highest Tree
+   gifts-today: Gifts Today
+   total-gifts: Total Gifts
+   streak: Current Streak
+   best-streak: Best Streak
+   claimable: Claimable Milestones
+   gui: GUI
+   tree-history: Tree History
+   milestone-history: Claimed Milestones
+  values:
+   no-history: No history recorded yet.
+  gui:
+   title: '<xm-accent>Tree Journal</xm-accent>'
+   trees: Trees
+   gifts: Gifts
+   streak: Streak
+   milestones: Milestones
+
+ milestones:
+  title: '<xm-accent><bold>Milestones</bold></xm-accent>'
+  labels:
+   usage: Usage
+   claim: Claim
+  values:
+   claimed: claimed
+   ready: ready
+
+ community:
+  title: '<xm-accent><bold>Community Milestones</bold></xm-accent>'
+  labels:
+   usage: Usage
+   gifts-opened: Gifts Opened
+   claim: Claim
 
 placeholders:
  values:
@@ -285,12 +440,19 @@ placeholders:
   manual: manual
   yes: Yes
   no: No
+  none: none
   unknown: unknown
   disabled: disabled
   ended: ended
   duration-days-hours: '{days}d {hours}h'
   duration-hours-minutes: '{hours}h {minutes}m'
   duration-minutes: '{minutes}m'
+  tree-level:
+   sapling: Sapling
+   small-tree: Small Tree
+   tree: Tree
+   magic-tree: Magic Tree
+   super-tree: Super Tree
  descriptions:
   event-active: whether the event is currently active
   event-active-text: human-readable active state
@@ -308,6 +470,15 @@ placeholders:
   trees-total: total loaded tree count
   trees-owners: number of unique tree owners
   player-trees: loaded trees owned by the placeholder player
+  player-highest-tree-level: highest loaded tree level owned by the placeholder player, as 0-5
+  player-highest-tree-level-name: highest loaded tree level owned by the placeholder player, as a config key
+  player-highest-tree-level-display: highest loaded tree level owned by the placeholder player, as display text
+  player-gifts-today: present gifts opened by the placeholder player today
+  player-gifts-total: present gifts opened by the placeholder player during the event
+  player-streak-current: current daily present-opening streak for the placeholder player
+  player-streak-best: best daily present-opening streak for the placeholder player
+  player-milestones-claimable: claimable personal milestone count for the placeholder player
+  community-gifts-opened: community-wide present gifts opened
   version: loaded plugin version
 
 console:
@@ -328,6 +499,8 @@ console:
   save-yaml-failed: Failed to save YAML configuration to {file}
   missing-bundled-resource: Missing bundled configuration resource {resource}
   load-bundled-resource-failed: Failed to load bundled configuration resource {resource}
+ milestone:
+  invalid: Skipping invalid milestone {key}
  gifts:
   no-heads: Warning! No heads loaded. Presents cannot spawn without a box head.
   load-item-failed: 'Failed to load gift item: {item}'
@@ -338,6 +511,9 @@ console:
   too-large: 'Gift item is too large to deserialize safely: {length} characters'
   invalid-material-or-base64: 'Invalid material name or Base64 gift item: {item}'
   deserialize-error: 'Failed to deserialize gift item: {error}'
+  invalid-entry: 'Invalid gift entry skipped: {item}'
+  no-valid-heads: No valid present head entries are configured.
+  no-valid-gifts: No valid gift entries are configured.
  placeholder:
   registered: 'Registered PlaceholderAPI expansion: {identifier}'
   registration-failed: PlaceholderAPI is present, but placeholder registration failed.
@@ -355,17 +531,13 @@ console:
   material-numeric-required: Tree level material '{material}' must use a numeric amount.
   material-load-failed: Cannot load material '{material}' for tree level.
   world-alias: Loading legacy X-Mas trees from saved world '{source}' into '{target}' via migration.world-aliases.
- alias:
-  command-map-unavailable: Unable to access the Bukkit command map. Skipping legacy /xmas alias registration.
-  owned-by-plugin: Legacy alias '/{alias}' is already owned by plugin '{plugin}'. Skipping alias registration.
-  registered-by-other: Legacy alias '/{alias}' is already registered by another command source. Skipping alias registration.
-  create-failed: Unable to create the legacy /xmas alias command.
-  registered: Registered legacy alias '/{alias}' for '/{primary}'.
-  construct-failed: 'Unable to construct dynamic command ''/{command}'': {error}'
+  validation-warnings: trees.yml has {count} validation warning(s). Run /xmastree data validate for details.
  heads:
   apply-failed: Unable to apply configured present head profile.
+  blank: Blank present head entry.
   non-mojang-url: 'Ignoring non-Mojang present skin URL: {url}'
   invalid-url: 'Invalid present skin URL: {url}'
   build-failed: 'Failed to build present head profile: {error}'
+  legacy-player-names: Present heads include {count} legacy player-name entr{plural}. Texture URLs are preferred for predictable Paper 26.x behavior.
  refund:
   place-container-failed: 'Failed to place refund {container}: {error}'

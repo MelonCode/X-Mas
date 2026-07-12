@@ -93,7 +93,7 @@ public class TextUtils {
         if (message == null) {
             return Component.empty();
         }
-        String themed = applyThemeAliases(LocaleManager.replaceCommonTokens(message));
+        String themed = applyThemeAliases(LocaleManager.replaceCommonTokens(message)).replace("\\>", ">");
         if (themed.indexOf('§') >= 0) {
             return LEGACY_SECTION.deserialize(themed);
         }
