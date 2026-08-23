@@ -52,8 +52,10 @@ Requirements:
 
 - JDK 25
 - Gradle
-- Centralized Paper 26.2 cache at `/Users/floris/Projects/Codex/servers/cache/Paper-26.2`
+- Shared Paper 26.2 cache at `../servers/cache/Paper-26.2`
 - PlaceholderAPI build `266` in the centralized Paper 26.2 cache
+
+Set `CODEX_SHARED_SERVERS_ROOT` to use a shared servers directory somewhere other than the default sibling `../servers` directory.
 
 Build and copy the release jar into `libs/`:
 

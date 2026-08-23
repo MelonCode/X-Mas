@@ -15,7 +15,7 @@ def resourceExpansionProperties = [
         version   : projectVersion,
         apiVersion: declaredPluginApiVersion
 ]
-def sharedServersRoot = file(System.getenv('CODEX_SHARED_SERVERS_ROOT') ?: '/Users/floris/Projects/Codex/servers')
+def sharedServersRoot = file(System.getenv('CODEX_SHARED_SERVERS_ROOT') ?: '../servers')
 def sharedPaperCache = new File(sharedServersRoot, 'cache/Paper-26.2')
 def paper262LibrariesDir = new File(sharedPaperCache, 'libraries')
 def paper262Api = new File(sharedPaperCache, "libraries/io/papermc/paper/paper-api/${paperCompileVersion}/paper-api-${paperCompileVersion}.jar")
