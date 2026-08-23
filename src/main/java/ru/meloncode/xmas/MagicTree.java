@@ -9,7 +9,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
-import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.persistence.PersistentDataType;
+import ru.meloncode.xmas.utils.HeadProfileUtils;
+import ru.meloncode.xmas.utils.TextUtils;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -54,10 +56,17 @@ public class MagicTree {
     }
 
     public static MagicTree getTreeByBlock(Block block) {
-        return XMas.getTree(blockAssociation.get(block));
+        if (block == null) {
+            return null;
+        }
+        UUID treeId = blockAssociation.get(block);
+        return treeId != null ? XMas.getTree(treeId) : null;
     }
 
     public static boolean isBlockBelongs(Block block) {
+        if (block == null) {
+            return false;
+        }
         return blockAssociation.containsKey(block);
     }
 
@@ -76,6 +85,18 @@ public class MagicTree {
         return level;
     }
 
+    public void refreshLevelDefinition() {
+        if (level == null || level.getLevelName() == null) {
+            return;
+        }
+        String levelName = level.getLevelName();
+        this.level = TreeLevel.fromString(levelName);
+        if (shouldBackfillLegacyRequirements()) {
+            this.levelupRequirements = new HashMap<>(level.getLevelupRequirements());
+            save();
+        }
+    }
+
     public Location getLocation() {
         return location;
     }
@@ -84,8 +105,33 @@ public class MagicTree {
         return levelupRequirements;
     }
 
+    private boolean shouldBackfillLegacyRequirements() {
+        if (level == null
+                || !level.hasNext()
+                || !"magic_tree".equalsIgnoreCase(level.getLevelName())
+                || level.getLevelupRequirements() == null
+                || level.getLevelupRequirements().isEmpty()) {
+            return false;
+        }
+        if (levelupRequirements == null || levelupRequirements.isEmpty()) {
+            return true;
+        }
+        for (Material material : levelupRequirements.keySet()) {
+            if (!level.getLevelupRequirements().containsKey(material)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean grow(Material material) {
+        if (levelupRequirements == null) {
+            levelupRequirements = new HashMap<>();
+        }
         if (levelupRequirements.containsKey(material)) {
+            int levelRequirement = level.getLevelupRequirements().getOrDefault(material, levelupRequirements.get(material));
+            int remainingBefore = levelupRequirements.get(material);
+            float volume = levelRequirement == remainingBefore ? Main.growFirstSoundVolume : Main.growRepeatSoundVolume;
             if (levelupRequirements.get(material) <= 1) {
                 levelupRequirements.remove(material);
             } else {
@@ -94,9 +140,10 @@ public class MagicTree {
             for (Block block : blocks) {
                 if (block.getType() == Material.SPRUCE_LEAVES || block.getType() == Material.SPRUCE_SAPLING) {
                     Effects.GROW.playEffect(block.getLocation());
-                    for (int i = 0; i <= 3; i++)
-                        location.getWorld().playSound(location, Sound.ENTITY_PLAYER_LEVELUP, 1, Main.RANDOM.nextFloat() + 0.2f);
                 }
+            }
+            if (volume > 0) {
+                location.getWorld().playSound(location, Sound.ENTITY_PLAYER_LEVELUP, volume, Main.RANDOM.nextFloat() + 0.2f);
             }
             save();
             return true;
@@ -119,8 +166,11 @@ public class MagicTree {
     public void playParticles()
     {
         if (blocks != null && blocks.size() > 0) {
+            if (level.getAmbientEffect() != null) {
+                level.getAmbientEffect().playEffect(location.clone().add(0, level.getTreeHeight(), 0));
+            }
             for (Block block : blocks) {
-                if(!block.getWorld().isChunkLoaded(block.getX() / 16, block.getZ() / 16))
+                if (!block.getChunk().isLoaded())
                     continue;
                 if (block.getType() == Material.SPRUCE_LEAVES) {
                     if (level.getSwagEffect() != null) {
@@ -131,9 +181,6 @@ public class MagicTree {
                     if (level.getBodyEffect() != null) {
                         level.getBodyEffect().playEffect(block.getLocation());
                     }
-                }
-                if (level.getAmbientEffect() != null) {
-                    level.getAmbientEffect().playEffect(location.clone().add(0, level.getTreeHeight(), 0));
                 }
             }
         }
@@ -160,28 +207,38 @@ public class MagicTree {
             FireworkMeta meta = fw.getFireworkMeta();
             meta.addEffect(FireworkEffect.builder().trail(true).withColor(Color.RED).withFade(Color.LIME).withFlicker().with(Type.BURST).build());
             fw.setFireworkMeta(meta);
-            fw.setMetadata("nodamage", new FixedMetadataValue(Main.getInstance(), true));
+            fw.getPersistentDataContainer().set(Main.getNoDamageFireworkKey(), PersistentDataType.BYTE, (byte) 1);
         }
         build();
         save();
     }
 
     public void unbuild() {
+        unbuild(true);
+    }
+
+    public void unbuild(boolean playBlockEffects) {
         Block block;
         Location loc;
         for (Entry<Block, UUID> cBlock : blockAssociation.entrySet()) {
             if (cBlock.getValue().equals(treeuid)) {
                 block = cBlock.getKey();
                 loc = block.getLocation();
-                loc.getWorld().playEffect(loc, Effect.STEP_SOUND, block.getType());
+                if (playBlockEffects && loc.getWorld() != null) {
+                    loc.getWorld().playEffect(loc, Effect.STEP_SOUND, block.getType());
+                }
                 block.setType(Material.AIR);
                 blockAssociation.remove(block);
             }
         }
         location.clone().add(0, -1, 0).getBlock().setType(Material.GRASS_BLOCK);
+        blocks = null;
     }
 
     public void build() {
+        if (blocks != null && !blocks.isEmpty()) {
+            return;
+        }
         if (level.getStructureTemplate().canGrow(location)) {
             blocks = level.getStructureTemplate().build(location);
             for (Block block : blocks) {
@@ -190,9 +247,8 @@ public class MagicTree {
         }
     }
 
-    @SuppressWarnings("deprecation")
     public void spawnPresent() {
-        if(!location.getWorld().isChunkLoaded((int)location.getX() / 16, (int)location.getZ() / 16))
+        if (!location.getChunk().isLoaded())
         {
             if(scheduledPresents + 1 <= 8)
                 scheduledPresents++;
@@ -206,20 +262,22 @@ public class MagicTree {
         {
             pBlock.setType(Material.PLAYER_HEAD);
             BlockState state = pBlock.getState();
-            if (state instanceof Skull) {
-                Skull skull = (Skull) state;
+            if (state instanceof Skull skull) {
                 BlockFace face;
                 do {
                     face = BlockFace.values()[Main.RANDOM.nextInt(BlockFace.values().length)];
                 }
                 while (face == BlockFace.DOWN || face == BlockFace.UP || face == BlockFace.SELF);
-                //skull.setRotation(face);
                 Rotatable skullRotatable = (Rotatable) skull.getBlockData();
                 skullRotatable.setRotation(face);
-                //skull.setSkullType(SkullType.PLAYER);
+                skull.setBlockData(skullRotatable);
                 skull.setType(Material.PLAYER_HEAD);
-                //skull.setOwner();
-                skull.setOwningPlayer(Bukkit.getOfflinePlayer(Main.getHeads().get(Main.RANDOM.nextInt(Main.getHeads().size()))));
+                HeadProfileUtils.applyConfiguredHead(
+                        skull,
+                        Main.getHeads().get(Main.RANDOM.nextInt(Main.getHeads().size())),
+                        Main.getInstance().getLogger()
+                );
+                skull.getPersistentDataContainer().set(Main.getPresentHeadKey(), PersistentDataType.BYTE, (byte) 1);
                 skull.update(true);
             }
         }
@@ -238,58 +296,144 @@ public class MagicTree {
     }
 
     public void end() {
+        end(getPlayerOwner());
+    }
+
+    public void end(Player refundTarget) {
         unbuild();
-        // Bad code. Need it fast.
-        Block bl;
-        if ((bl = location.clone().add(1, 0, 0).getBlock()).getType() == Material.PLAYER_HEAD)
-            bl.setType(Material.AIR);
-        if ((bl = location.clone().add(-1, 0, 0).getBlock()).getType() == Material.PLAYER_HEAD)
-            bl.setType(Material.AIR);
-        if ((bl = location.clone().add(0, 0, 1).getBlock()).getType() == Material.PLAYER_HEAD)
-            bl.setType(Material.AIR);
-        if ((bl = location.clone().add(0, 0, -1).getBlock()).getType() == Material.PLAYER_HEAD)
-            bl.setType(Material.AIR);
-
-        if ((bl = location.clone().add(1, 0, 1).getBlock()).getType() == Material.PLAYER_HEAD)
-            bl.setType(Material.AIR);
-        if ((bl = location.clone().add(-1, 0, -1).getBlock()).getType() == Material.PLAYER_HEAD)
-            bl.setType(Material.AIR);
-
-        if ((bl = location.clone().add(-1, 0, 1).getBlock()).getType() == Material.PLAYER_HEAD)
-            bl.setType(Material.AIR);
-        if ((bl = location.clone().add(1, 0, -1).getBlock()).getType() == Material.PLAYER_HEAD)
-            bl.setType(Material.AIR);
+        clearNearbyPresents();
         if (Main.resourceBack) {
-            bl = location.getBlock();
-            bl.setType(Material.CHEST);
-            Chest chest = (Chest) bl.getState();
-            Inventory inv = chest.getInventory();
+            refundResources(refundTarget);
+        }
+        XMas.removeTree(this, false);
+    }
 
-            inv.addItem(new ItemStack(Material.DIAMOND, 4));
-            inv.addItem(new ItemStack(Material.EMERALD, 1));
-            TreeLevel cLevel = TreeLevel.SAPLING;
-            while (cLevel != level) {
-                if (cLevel.getLevelupRequirements() != null && cLevel.getLevelupRequirements().size() > 0) {
-                    for (Entry<Material, Integer> currItem : cLevel.getLevelupRequirements().entrySet()) {
-                        inv.addItem(new ItemStack(currItem.getKey(), currItem.getValue()));
-                    }
+    private void clearNearbyPresents() {
+        Block bl;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                if (x == 0 && z == 0) {
+                    continue;
                 }
-
-                if (cLevel.nextLevel == null)
-                    break;
-                cLevel = cLevel.nextLevel;
-            }
-
-            int count = 0;
-            for (Entry<Material, Integer> currItem : level.getLevelupRequirements().entrySet()) {
-                if (getLevelupRequirements().containsKey(currItem.getKey()))
-                    count = getLevelupRequirements().get(currItem.getKey());
-                if (currItem.getValue() - count > 0)
-                    inv.addItem(new ItemStack(currItem.getKey(), currItem.getValue() - count));
-                count = 0;
+                bl = location.clone().add(x, 0, z).getBlock();
+                if (XMas.isPresentHead(bl)) {
+                    bl.setType(Material.AIR);
+                }
             }
         }
-        XMas.removeTree(this);
+    }
+
+    private void refundResources(Player refundTarget) {
+        List<ItemStack> refundItems = collectRefundItems();
+        if (refundItems.isEmpty()) {
+            return;
+        }
+
+        List<ItemStack> leftovers = putRefundsInContainer(Material.CHEST, refundItems);
+        if (leftovers != null) {
+            dropRefunds(leftovers);
+            notifyRefund(refundTarget, LocaleManager.text("messages.tree.refund.chest", "<xm-success>Your tree resources were returned in a chest.</xm-success>"));
+            return;
+        }
+
+        leftovers = putRefundsInContainer(Material.BARREL, refundItems);
+        if (leftovers != null) {
+            dropRefunds(leftovers);
+            notifyRefund(refundTarget, LocaleManager.text("messages.tree.refund.barrel", "<xm-success>Your tree resources were returned in a barrel.</xm-success>"));
+            return;
+        }
+
+        leftovers = refundTarget != null ? addItems(refundTarget.getInventory(), refundItems) : refundItems;
+        dropRefunds(leftovers);
+        if (refundTarget != null) {
+            if (leftovers.isEmpty()) {
+                notifyRefund(refundTarget, LocaleManager.text("messages.tree.refund.inventory", "<xm-success>Your tree resources were returned to your inventory.</xm-success>"));
+            } else {
+                notifyRefund(refundTarget, LocaleManager.text("messages.tree.refund.inventory-overflow", "<xm-info>Your tree resources were returned. Inventory overflow dropped at the tree.</xm-info>"));
+            }
+        }
+    }
+
+    private List<ItemStack> collectRefundItems() {
+        List<ItemStack> refundItems = new ArrayList<>();
+
+        TreeLevel cLevel = TreeLevel.SAPLING;
+        while (cLevel != null && cLevel != level) {
+            addRequirements(refundItems, cLevel.getLevelupRequirements());
+            cLevel = cLevel.nextLevel;
+        }
+
+        if (level.getLevelupRequirements() != null) {
+            for (Entry<Material, Integer> currItem : level.getLevelupRequirements().entrySet()) {
+                int remaining = getLevelupRequirements().getOrDefault(currItem.getKey(), 0);
+                int spent = Math.max(0, currItem.getValue() - remaining);
+                if (spent > 0) {
+                    refundItems.add(new ItemStack(currItem.getKey(), spent));
+                }
+            }
+        }
+        return refundItems;
+    }
+
+    public List<ItemStack> getRefundPreviewItems() {
+        return collectRefundItems();
+    }
+
+    private void addRequirements(List<ItemStack> refundItems, Map<Material, Integer> requirements) {
+        if (requirements == null || requirements.isEmpty()) {
+            return;
+        }
+        for (Entry<Material, Integer> currItem : requirements.entrySet()) {
+            if (currItem.getValue() > 0) {
+                refundItems.add(new ItemStack(currItem.getKey(), currItem.getValue()));
+            }
+        }
+    }
+
+    private List<ItemStack> putRefundsInContainer(Material containerMaterial, List<ItemStack> refundItems) {
+        Block refundBlock = location.getBlock();
+        try {
+            refundBlock.setType(containerMaterial, false);
+            BlockState state = refundBlock.getState();
+            if (state instanceof Container container) {
+                return addItems(container.getInventory(), refundItems);
+            }
+        } catch (Exception e) {
+            Bukkit.getLogger().warning(LocaleManager.text("console.refund.place-container-failed", "Failed to place refund {container}: {error}",
+                    "{container}", containerMaterial.name(),
+                    "{error}", e.getMessage()));
+        }
+        refundBlock.setType(Material.AIR, false);
+        return null;
+    }
+
+    private List<ItemStack> addItems(Inventory inventory, List<ItemStack> items) {
+        List<ItemStack> clones = new ArrayList<>();
+        for (ItemStack item : items) {
+            if (item != null && !item.getType().isAir()) {
+                clones.add(item.clone());
+            }
+        }
+        Map<Integer, ItemStack> leftovers = inventory.addItem(clones.toArray(new ItemStack[0]));
+        return new ArrayList<>(leftovers.values());
+    }
+
+    private void dropRefunds(List<ItemStack> items) {
+        if (items == null || items.isEmpty() || location.getWorld() == null) {
+            return;
+        }
+        Location dropLocation = location.clone().add(0.5, 0.5, 0.5);
+        for (ItemStack item : items) {
+            if (item != null && !item.getType().isAir()) {
+                location.getWorld().dropItemNaturally(dropLocation, item.clone());
+            }
+        }
+    }
+
+    private void notifyRefund(Player refundTarget, String message) {
+        if (refundTarget != null && refundTarget.isOnline()) {
+            TextUtils.sendRawMessage(refundTarget, message);
+        }
     }
 
     public long getPresentCounter() {
@@ -298,6 +442,33 @@ public class MagicTree {
 
     public int getScheduledPresents() {
         return scheduledPresents;
+    }
+
+    public boolean isBuilt() {
+        return blocks != null && !blocks.isEmpty();
+    }
+
+    public int getBuiltBlockCount() {
+        return blocks != null ? blocks.size() : 0;
+    }
+
+    public int getNearbyPresentCount() {
+        if (location == null || location.getWorld() == null) {
+            return 0;
+        }
+        int presentCount = 0;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                if (x == 0 && z == 0) {
+                    continue;
+                }
+                Block block = location.clone().add(x, 0, z).getBlock();
+                if (XMas.isPresentHead(block)) {
+                    presentCount++;
+                }
+            }
+        }
+        return presentCount;
     }
 
     public boolean hasScheduledPresents() {

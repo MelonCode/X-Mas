@@ -8,6 +8,8 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+.gradle/
+build/
 
 # IntelliJ project files
 .idea
@@ -18,3 +20,19 @@ gen
 .classpath
 .settings
 bin
+
+# Local editors and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
+*.swo
+
+# Local test servers and generated Paper data
+servers/
+cache/
+libraries/
+versions/
+
+# Local release jars for the centralized Paper runner
+libs/

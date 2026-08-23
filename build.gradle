@@ -1,0 +1,110 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.onemb.xmas'
+version = '2.1.0-051'
+def projectVersion = version.toString()
+def enableDeprecationLint = providers.gradleProperty('lintDeprecatedApi').map { it.toBoolean() }.getOrElse(false)
+
+def javaRelease = 25
+def paperCompileVersion = '26.2.build.29-alpha'
+def declaredPluginApiVersion = '26.2'
+def experimentalCompatibilityTarget = 'future 26.x'
+def resourceExpansionProperties = [
+        version   : projectVersion,
+        apiVersion: declaredPluginApiVersion
+]
+def sharedServersRoot = file(System.getenv('CODEX_SHARED_SERVERS_ROOT') ?: '../servers')
+def sharedPaperCache = new File(sharedServersRoot, 'cache/Paper-26.2')
+def paper262LibrariesDir = new File(sharedPaperCache, 'libraries')
+def paper262Api = new File(sharedPaperCache, "libraries/io/papermc/paper/paper-api/${paperCompileVersion}/paper-api-${paperCompileVersion}.jar")
+def placeholderApiJar = new File(sharedPaperCache, 'plugins/PlaceholderAPI-2.12.3-DEV-266.jar')
+def paper262ArchiveName = "1MB-XMas-2026-v${projectVersion}-v25-26.2.jar"
+
+[
+    [paper262Api, "Paper API jar"],
+    [paper262LibrariesDir, "Paper libraries directory"],
+    [placeholderApiJar, "PlaceholderAPI jar"],
+].each { entry ->
+    File path = entry[0] as File
+    String label = entry[1] as String
+    if (!path.exists()) {
+        throw new GradleException("${label} not found at ${path}. This project now uses the centralized Paper cache under ${sharedServersRoot}.")
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaRelease)
+    }
+}
+
+dependencies {
+    compileOnly files(paper262Api)
+    compileOnly fileTree(dir: paper262LibrariesDir, include: '**/*.jar')
+    compileOnly files(placeholderApiJar)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = javaRelease
+    if (enableDeprecationLint) {
+        options.compilerArgs.add('-Xlint:deprecation')
+    }
+}
+
+tasks.named('processResources') {
+    filteringCharset = 'UTF-8'
+    inputs.properties(resourceExpansionProperties)
+    filesMatching('plugin.yml') {
+        expand(resourceExpansionProperties)
+    }
+}
+
+tasks.named('jar') {
+    archiveFileName = paper262ArchiveName
+}
+
+tasks.register('releaseJar', Copy) {
+    description = 'Copies the newest plugin jar into libs/ for the centralized Paper runner.'
+    group = 'build'
+    dependsOn tasks.named('jar')
+    from(tasks.named('jar'))
+    into(layout.projectDirectory.dir('libs'))
+}
+
+tasks.register('paper262Jar') {
+    description = 'Assembles the Paper 26.2 Java 25 plugin jar and copies it into libs/.'
+    group = 'build'
+    dependsOn tasks.named('releaseJar')
+}
+
+tasks.register('printBuildConfig') {
+    description = 'Prints the active centralized build and compatibility configuration.'
+    group = 'help'
+    doLast {
+        println 'XMasTree build config'
+        println "  version: ${projectVersion}"
+        println "  compile target: Paper API ${paperCompileVersion}"
+        println "  declared plugin api-version: ${declaredPluginApiVersion}"
+        println "  experimental compatibility target: Paper ${experimentalCompatibilityTarget}"
+        println "  java release target: ${javaRelease}"
+        println "  centralized Paper cache: ${sharedPaperCache}"
+        println "  PlaceholderAPI compile jar: ${placeholderApiJar}"
+        println "  deprecation lint enabled: ${enableDeprecationLint}"
+        println "  build/libs output: ${layout.buildDirectory.file("libs/${paper262ArchiveName}").get().asFile}"
+        println "  libs/ release copy: ${layout.projectDirectory.file("libs/${paper262ArchiveName}").asFile}"
+    }
+}
+
+tasks.register('buildAllJars') {
+    description = 'Builds the current Paper 26.2 target jar and copies it into libs/.'
+    group = 'build'
+    dependsOn tasks.named('releaseJar')
+    finalizedBy tasks.named('printBuildConfig')
+}
+
+tasks.named('assemble') {
+    dependsOn tasks.named('paper262Jar')
+}

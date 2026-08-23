@@ -1,0 +1,110 @@
+Remaining warnings and deferred deprecation cleanup
+=================================================
+
+- `compileJava` is clean after the Paper 26.x deprecation sweep.
+- Present heads are now tagged with plugin PDC data, so gift detection no longer depends on deprecated skull-profile reads.
+- The active custom-fork target is now Paper 26.2 with Java 25 bytecode.
+- To run an explicit deprecation lint pass in future work, use:
+  - `gradle clean compileJava -PlintDeprecatedApi=true`
+- Head texture application now uses a reflective bridge to Paper's current profile APIs so the plugin can preserve existing player-name and texture-URL configs without keeping deprecated profile methods in the compiled code.
+
+
+Modernization and quality-of-life roadmap
+=========================================
+
+Near-term implementation candidates
+-----------------------------------
+
+- Finish MiniMessage theme polish:
+  - done: moved destroy/refund message styling into `translations/locale_en.yml`
+  - tune the soft 1MB pastel theme for any remaining chat/debug/crystal/requirement copy as it is touched
+
+- Add admin preview and test commands:
+  - done: inspect tree state
+  - done: preview particles by tree stage with `/xmastree test particle`
+  - done: test first/repeat grow sounds with `/xmastree test sound`
+  - done: test refund delivery safely with `/xmastree test refund` dry-run output
+
+- Improve tree inspection:
+  - done: expanded `/xmastree inspect` with owner online state, owner tree count, world/chunk state, built block count, next level, next-level space check, gift cooldown, nearby present count, requirement progress, spent resources, and refund state
+  - show owner, tree UUID, level, world/location, remaining requirements, spent/refundable resources, present timer, scheduled presents, and whether it can level up
+  - policy-must: existing trees from previous years must keep working; returning players waited for their legacy tree and should be able to keep it while receiving another crystal this year, letting them have two trees and earn more gifts
+
+- Add gift management UI:
+  - done: view configured gifts with `/xmastree gifts list`
+  - done: add held item with `/xmastree gifts addhand`, while keeping `/xmastree addhand` as a compatibility shortcut
+  - done: remove gifts with `/xmastree gifts remove <index>`
+  - done: test a gift roll with `/xmastree gifts roll`
+  - done: support weighted gift pools with `/xmastree gifts weight <index> <weight>` while keeping simple entries compatible as weight 1
+
+- Modernize PlaceholderAPI output:
+  - done: player tree count
+  - done: player highest tree level, level key, and display text
+  - done: total active trees
+  - done: event status text
+  - done: future timer/status values useful for CMI holograms and ajLeaderboards
+
+- Add safer data tools:
+  - done: backup `trees.yml` with `/xmastree data backup`
+  - done: validate saved tree data with `/xmastree data validate`
+  - done: dry-run/apply saved world-name migration with `/xmastree data migrate-world <from> <to> [dry-run|apply]`
+  - report missing worlds, invalid owners, invalid levels, and duplicate/overlapping tree data
+
+- Continue present head and texture cleanup:
+  - verify Paper 26.2 profile behavior for player names and texture URLs
+  - done: improve diagnostics around invalid head entries, legacy player-name heads, and invalid gift entries
+
+- Add a reload report:
+  - done: show locale, gift count, present head count, tree count, tree owner count, particles setting, sound volumes, legacy alias state, and warning diagnostics
+
+Future feature ideas to review
+------------------------------
+
+- Add event streaks:
+  - done: track present openings in progress.yml
+  - done: 6 gift claims in a day for a "hardcore elf" style daily milestone
+  - done: 7 days in a row milestone support
+  - done: add /xmastree milestones and /xmastree milestones claim <key>
+  - done: milestone reward commands can trigger extra gifts for all online players
+  - future: add an every-day-of-the-event/month milestone once the exact 2026 event calendar is decided
+
+- Add one extra progression level after the current max tree:
+  - done: hardcoded super_tree final stage after magic_tree
+  - done: super_tree has Paper 26.2 particle config defaults
+  - done: existing legacy magic_tree saves receive new super_tree requirements on load instead of upgrading for free
+
+- Add seasonal admin presets:
+  - save/load named config presets for gift pools, particle styles, sound tuning, and event dates
+
+- Add player tree journal:
+  - done: /xmastree journal text summary
+  - done: /xmastree journal gui informational inventory
+  - future: add tree history and collected milestone reward details
+
+- Add community milestones:
+  - done: total server-wide gifts opened
+  - done: /xmastree community and /xmastree community claim <key>
+  - done: community reward commands can unlock server-wide bonus gift waves
+  - future: total trees grown
+
+- Add configurable tree protection helpers:
+  - staff-only teleport to a tree
+  - flag trees in unsafe/unloaded/missing worlds
+  - optional highlight particles around a selected tree for support checks
+
+- Add event wrap-up report:
+  - final tree count
+  - active owners
+  - gifts spawned/opened
+  - legacy trees preserved
+  - players eligible for returning-player rewards
+
+Live hardening completed after v2.1.0-049
+----------------------------------------
+
+- done: add `/xmastree milestones test <key> [player]` to preview personal milestone reward commands without claiming or executing them
+- done: add `/xmastree community test <key>` to preview community milestone reward commands without claiming or executing them
+- done: require `/xmastree community claim <key> confirm` before global community milestone rewards execute
+- done: log whether each milestone reward command was accepted by the server command dispatcher
+- done: debounce `progress.yml` writes during active present claiming and flush on reload, disable, and progress backup
+- done: add `/xmastree data backup progress` and `/xmastree data backup all` alongside the existing tree-data backup

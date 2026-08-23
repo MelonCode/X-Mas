@@ -1,10 +1,91 @@
 name: X-Mas
-version: ${project.version}
+version: ${version}
 main: ru.meloncode.xmas.Main
 load: POSTWORLD
-api-version: '1.14'
-softdepend: [Multiverse-Core, PlotMe, PlotSquared, Plotz]
+api-version: '${apiVersion}'
+softdepend: [Multiverse-Core, PlotMe, PlotSquared, Plotz, PlaceholderAPI]
 commands:
- xmas:
-  usage: Use /<command> help to see help
-  permission: xmas.admin
+ xmastree:
+  description: Manage the 1MB XMas Tree event
+  usage: /<command> [help|info|give|gifts [list|roll|remove|weight|spawn|addhand]|addhand|reload|inspect|test [sound|particle|refund]|data|journal|milestones|community|debug [section|page]|end]
+permissions:
+ onembxmastree.admin:
+  description: Allows all XMas Tree commands and overrides
+  default: op
+  children:
+   onembxmastree.command.status: true
+   onembxmastree.command.help: true
+   onembxmastree.command.info: true
+   onembxmastree.command.give: true
+   onembxmastree.command.gifts: true
+   onembxmastree.command.addhand: true
+   onembxmastree.command.reload: true
+   onembxmastree.command.inspect: true
+   onembxmastree.command.test: true
+   onembxmastree.command.data: true
+   onembxmastree.command.journal: true
+   onembxmastree.command.milestones: true
+   onembxmastree.command.milestones.claim: true
+   onembxmastree.command.community: true
+   onembxmastree.command.community.claim: true
+   onembxmastree.command.debug: true
+   onembxmastree.command.debug.toggle: true
+   onembxmastree.command.end: true
+   onembxmastree.tree.override: true
+ onembxmastree.command.status:
+  description: Allows viewing /xmastree status
+  default: true
+ onembxmastree.command.help:
+  description: Allows viewing /xmastree help
+  default: true
+ onembxmastree.command.info:
+  description: Allows viewing /xmastree info
+  default: true
+ onembxmastree.command.give:
+  description: Allows /xmastree give
+  default: op
+ onembxmastree.command.gifts:
+  description: Allows /xmastree gifts
+  default: op
+ onembxmastree.command.addhand:
+  description: Allows /xmastree gifts addhand and /xmastree addhand
+  default: op
+ onembxmastree.command.reload:
+  description: Allows /xmastree reload
+  default: op
+ onembxmastree.command.inspect:
+  description: Allows /xmastree inspect
+  default: op
+ onembxmastree.command.test:
+  description: Allows /xmastree test
+  default: op
+ onembxmastree.command.data:
+  description: Allows /xmastree data
+  default: op
+ onembxmastree.command.journal:
+  description: Allows /xmastree journal
+  default: true
+ onembxmastree.command.milestones:
+  description: Allows /xmastree milestones
+  default: true
+ onembxmastree.command.milestones.claim:
+  description: Allows /xmastree milestones claim
+  default: true
+ onembxmastree.command.community:
+  description: Allows /xmastree community
+  default: true
+ onembxmastree.command.community.claim:
+  description: Allows /xmastree community claim <key> confirm
+  default: op
+ onembxmastree.command.debug:
+  description: Allows /xmastree debug
+  default: op
+ onembxmastree.command.debug.toggle:
+  description: Allows /xmastree debug toggle
+  default: op
+ onembxmastree.command.end:
+  description: Allows /xmastree end
+  default: op
+ onembxmastree.tree.override:
+  description: Allows managing other players' trees
+  default: op

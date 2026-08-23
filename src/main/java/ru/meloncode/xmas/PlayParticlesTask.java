@@ -12,7 +12,7 @@ class PlayParticlesTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        if (Main.inProgress)
+        if (Main.inProgress && Main.particlesEnabled)
             for (MagicTree tree : XMas.getAllTrees()) {
                 tree.playParticles();
             }

@@ -6,6 +6,7 @@ import org.bukkit.util.Vector;
 import java.util.Map;
 
 public class TreeLevel {
+    public static TreeLevel SUPER_TREE;
     public static TreeLevel MAGIC_TREE;
     public static TreeLevel TREE;
     public static TreeLevel SMALL_TREE;
@@ -48,6 +49,8 @@ public class TreeLevel {
                 return SMALL_TREE;
             case "magic_tree":
                 return MAGIC_TREE;
+            case "super_tree":
+                return SUPER_TREE;
             default:
                 throw new IllegalArgumentException("Wrong level '" + name + "'");
         }

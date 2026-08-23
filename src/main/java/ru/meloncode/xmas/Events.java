@@ -4,6 +4,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -11,15 +12,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
-import org.jetbrains.annotations.Nullable;
+import org.bukkit.persistence.PersistentDataType;
 import ru.meloncode.xmas.utils.TextUtils;
 
 import java.util.Collection;
@@ -34,13 +35,27 @@ class Events implements Listener {
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onJournalInventoryClick(InventoryClickEvent event) {
+        if (event.getInventory().getHolder() instanceof JournalInventoryHolder) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onJournalInventoryDrag(InventoryDragEvent event) {
+        if (event.getInventory().getHolder() instanceof JournalInventoryHolder) {
+            event.setCancelled(true);
+        }
+    }
+
 
     @EventHandler
     public void onPlayerOpenPresent(PlayerInteractEvent event) {
         if (event.getHand() == EquipmentSlot.OFF_HAND) return; //Event firing for both hands
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block block = event.getClickedBlock();
-            if (block != null && block.getType() == Material.PLAYER_HEAD) {
+            if (XMas.isPresentHead(block)) {
                 XMas.processPresent(block, event.getPlayer());
             }
         }
@@ -49,7 +64,8 @@ class Events implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onPlayerOpenPresent(BlockBreakEvent event) {
         Block block = event.getBlock();
-        if (block != null && block.getType() == Material.PLAYER_HEAD) {
+        if (XMas.isPresentHead(block)) {
+            event.setDropItems(false);
             XMas.processPresent(block, event.getPlayer());
         }
     }
@@ -70,9 +86,15 @@ class Events implements Listener {
         Player player = event.getPlayer();
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block block = event.getClickedBlock();
+            if (block == null) {
+                return;
+            }
             if (MagicTree.isBlockBelongs(block)) {
                 event.setCancelled(true);
                 MagicTree tree = MagicTree.getTreeByBlock(block);
+                if (tree == null) {
+                    return;
+                }
                 if (Main.inProgress) {
                     if (tree.getLevel().hasNext()) {
                         if (tree.canLevelUp()) {
@@ -95,7 +117,7 @@ class Events implements Listener {
                             }
                             if (tree.level.nextLevel != null) {
                                 TextUtils.sendMessage(player, LocaleManager.GROW_LVL_PROGRESS);
-                                for (String line : TextUtils.generateChatReqList(tree)) {
+                                for (var line : TextUtils.generateChatReqList(tree)) {
                                     TextUtils.sendMessage(player, line);
                                 }
 
@@ -109,7 +131,7 @@ class Events implements Listener {
                     }
                 } else {
                     if (player.getUniqueId().equals(tree.getOwner())) {
-                        tree.end();
+                        tree.end(player);
                         TextUtils.sendMessage(player, LocaleManager.TIMEOUT);
                     } else {
                         TextUtils.sendMessage(player, LocaleManager.DESTROY_FAIL_OWNER);
@@ -123,7 +145,7 @@ class Events implements Listener {
                             if (XMas.getTreesPlayerOwn(player).size() < Main.MAX_TREE_COUNT) {
                                 if (is.getType() == XMas.XMAS_CRYSTAL.getType() && is.hasItemMeta() && is.getItemMeta().hasLore()) {
                                     ItemMeta im = is.getItemMeta();
-                                    if (im.getLore().equals(XMas.XMAS_CRYSTAL.getItemMeta().getLore())) {
+                                    if (im != null && im.getPersistentDataContainer().has(Main.getCrystalKey(), PersistentDataType.BYTE)) {
                                         if (player.getGameMode() != GameMode.CREATIVE) {
                                             if (is.getAmount() > 1) {
                                                 is.setAmount(is.getAmount() - 1);
@@ -164,17 +186,6 @@ class Events implements Listener {
     }
 
     @EventHandler
-    public void onItemSpawn(ItemSpawnEvent event) {
-        ItemStack item = event.getEntity().getItemStack();
-        if (item.getType() == Material.PLAYER_HEAD) {
-            SkullMeta meta = (SkullMeta) item.getItemMeta();
-            if (meta.getOwner() != null && Main.getHeads().contains(meta.getOwner())) {
-                event.setCancelled(true);
-            }
-        }
-    }
-
-    @EventHandler
     public void onPistonRetract(BlockPistonRetractEvent event) {
         if (MagicTree.isBlockBelongs(event.getBlock())) {
             event.setCancelled(true);
@@ -210,20 +221,27 @@ class Events implements Listener {
             MagicTree tree = MagicTree.getTreeByBlock(block);
             switch (block.getType()) {
                 case SPRUCE_LOG:
-                    if (player.getUniqueId().equals(tree.getOwner()) || player.hasPermission("xmas.admin")) {
+                    if (player.getUniqueId().equals(tree.getOwner()) || XMasCommand.canOverrideTree(player)) {
                         if (Main.inProgress)
                             if (destroyers.containsKey(player.getUniqueId()) && System.currentTimeMillis() - destroyers.get(player.getUniqueId()) <= 10000) {
-                                XMas.removeTree(tree);
+                                if (Main.resourceBack) {
+                                    tree.end(player);
+                                } else {
+                                    XMas.removeTree(tree);
+                                }
                                 if (Main.inProgress)
-                                    TextUtils.sendMessage(player, ChatColor.DARK_RED + LocaleManager.MONSTER);
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_COMPLETE);
                             } else {
                                 destroyers.put(player.getUniqueId(), System.currentTimeMillis());
                                 if (Main.inProgress)
-                                    TextUtils.sendMessage(player, ChatColor.RED + LocaleManager.DESTROY_WARNING);
-                                TextUtils.sendMessage(player, ChatColor.DARK_RED + LocaleManager.DESTROY_TUT);
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_WARNING);
+                                TextUtils.sendMessage(player, LocaleManager.DESTROY_TUT);
+                                if (Main.resourceBack) {
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_RESOURCE_BACK);
+                                }
                             }
                         else {
-                            tree.end();
+                            tree.end(player);
                         }
                     } else {
                         TextUtils.sendMessage(player, LocaleManager.DESTROY_FAIL_OWNER);
@@ -232,27 +250,34 @@ class Events implements Listener {
                 case SPRUCE_LEAVES:
                 case GLOWSTONE:
                     if (Main.inProgress)
-                        TextUtils.sendMessage(player, ChatColor.DARK_GREEN + LocaleManager.DESTROY_LEAVES_SANTA);
-                    if (player.getUniqueId().equals(tree.getOwner()) || player.hasPermission("xmas.admin")) {
-                        TextUtils.sendMessage(player, ChatColor.RED + LocaleManager.DESTROY_LEAVES_TUT);
+                        TextUtils.sendMessage(player, LocaleManager.DESTROY_LEAVES_SANTA);
+                    if (player.getUniqueId().equals(tree.getOwner()) || XMasCommand.canOverrideTree(player)) {
+                        TextUtils.sendMessage(player, LocaleManager.DESTROY_LEAVES_TUT);
                     } else {
                         TextUtils.sendMessage(player, LocaleManager.DESTROY_FAIL_OWNER);
                     }
                     break;
                 case SPRUCE_SAPLING:
-                    if (player.getUniqueId().equals(tree.getOwner()) || player.hasPermission("xmas.admin")) {
+                    if (player.getUniqueId().equals(tree.getOwner()) || XMasCommand.canOverrideTree(player)) {
                         if (Main.inProgress) {
                             if (destroyers.containsKey(player.getUniqueId()) && System.currentTimeMillis() - destroyers.get(player.getUniqueId()) <= 10000) {
-                                XMas.removeTree(tree);
-                                TextUtils.sendMessage(player, ChatColor.RED + LocaleManager.MONSTER);
+                                if (Main.resourceBack) {
+                                    tree.end(player);
+                                } else {
+                                    XMas.removeTree(tree);
+                                }
+                                TextUtils.sendMessage(player, LocaleManager.DESTROY_COMPLETE);
                             } else {
                                 destroyers.put(player.getUniqueId(), System.currentTimeMillis());
                                 if (Main.inProgress)
-                                    TextUtils.sendMessage(player, ChatColor.RED + LocaleManager.DESTROY_SAPLING);
-                                TextUtils.sendMessage(player, ChatColor.DARK_RED + LocaleManager.DESTROY_TUT);
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_SAPLING);
+                                TextUtils.sendMessage(player, LocaleManager.DESTROY_TUT);
+                                if (Main.resourceBack) {
+                                    TextUtils.sendMessage(player, LocaleManager.DESTROY_RESOURCE_BACK);
+                                }
                             }
                         } else {
-                            tree.end();
+                            tree.end(player);
                         }
                     } else {
                         TextUtils.sendMessage(player, LocaleManager.DESTROY_FAIL_OWNER);
@@ -290,10 +315,10 @@ class Events implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     private void disableFireworkDamage(EntityDamageByEntityEvent e)
     {
-        if (e.getDamager().getType() == EntityType.FIREWORK) {
-            if (e.getDamager().hasMetadata("nodamage")) {
-                e.setCancelled(true);
-            }
+        if (e.getDamager().getType() == EntityType.FIREWORK_ROCKET
+                && e.getDamager() instanceof Firework firework
+                && firework.getPersistentDataContainer().has(Main.getNoDamageFireworkKey(), PersistentDataType.BYTE)) {
+            e.setCancelled(true);
         }
     }
 
